@@ -1,0 +1,64 @@
+# Dependencies & Libraries
+node_modules/
+vendor/
+
+# Environment & Config (JANGAN DI-UPLOAD!)
+config/database.php
+.env
+.env.local
+
+# Database credentials
+*.sql.backup
+
+# Cache & Temporary Files
+*.log
+*.cache
+cache/
+temp/
+tmp/
+
+# Operating System Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE & Editor Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+*.sublime-project
+*.sublime-workspace
+
+# PHP
+*.phpunit.result.cache
+
+# Uploads (jangan upload gambar user)
+uploads/*
+!uploads/.gitkeep
+
+# Session Files
+sessions/*
+!sessions/.gitkeep
+
+# Backup Files
+*.bak
+*.backup
+*~
+
+# Compiled Files
+*.min.js
+*.min.css
+
+# Package Manager
+composer.lock
+package-lock.json
+yarn.lock

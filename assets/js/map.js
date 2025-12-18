@@ -79,19 +79,14 @@ class TourismMap {
             });
         });
 
-        // Tourism list items
+        // Tourism list items - click to show quick view
         document.addEventListener('click', (e) => {
             if (e.target.closest('.tourism-item')) {
                 const item = e.target.closest('.tourism-item');
                 const destinationId = item.dataset.id;
                 const destination = this.tourismData.find(d => d.id == destinationId);
                 if (destination) {
-                    this.map.setView(destination.coords, 15);
-                    // Find and open the corresponding marker popup
-                    const markerData = this.markers.find(m => m.destination.id === destination.id);
-                    if (markerData) {
-                        markerData.marker.openPopup();
-                    }
+                    this.showQuickView(destination);
                 }
             }
         });
@@ -390,12 +385,10 @@ class TourismMap {
         `;
 
         item.addEventListener('click', () => {
-            this.map.setView(destination.coords, 15);
-            // Find and open the corresponding marker popup
-            const markerData = this.markers.find(m => m.destination.id === destination.id);
-            if (markerData) {
-                markerData.marker.openPopup();
-            }
+            this.showQuickView(destination);
+        });
+        item.addEventListener('click', () => {
+            this.showQuickView(destination);
         });
 
         return item;
@@ -507,6 +500,102 @@ class TourismMap {
             index > -1 ? 'Dihapus dari favorit' : 'Ditambahkan ke favorit',
             'success'
         );
+    }
+
+    showQuickView(destination) {
+        const modal = document.getElementById('modal-quick-view');
+        const title = document.getElementById('quick-view-title');
+        const mainImage = document.getElementById('quick-view-main-image');
+        const thumbnails = document.getElementById('quick-view-thumbnails');
+        const rating = document.getElementById('quick-view-rating');
+        const category = document.getElementById('quick-view-category');
+        const location = document.getElementById('quick-view-location');
+        const description = document.getElementById('quick-view-description');
+        const hours = document.getElementById('quick-view-hours');
+        const price = document.getElementById('quick-view-price');
+        const contact = document.getElementById('quick-view-contact');
+        const contactContainer = document.getElementById('quick-view-contact-container');
+        const detailBtn = document.getElementById('quick-view-detail-btn');
+        const favoriteBtn = document.getElementById('quick-view-favorite-btn');
+        const shareBtn = document.getElementById('quick-view-share-btn');
+        const directionsBtn = document.getElementById('quick-view-directions-btn');
+
+        // Set content
+        title.textContent = destination.name;
+        mainImage.src = destination.images[0];
+        mainImage.alt = destination.name;
+        rating.textContent = destination.rating;
+        
+        category.textContent = destination.category.charAt(0).toUpperCase() + destination.category.slice(1);
+        category.style.backgroundColor = window.getCategoryColor(destination.category);
+        
+        location.textContent = destination.location;
+        description.textContent = destination.description;
+        hours.textContent = destination.hours || 'Tidak tersedia';
+        price.textContent = destination.price || 'Gratis';
+        
+        if (destination.contact) {
+            contact.textContent = destination.contact;
+            contactContainer.style.display = 'flex';
+        } else {
+            contactContainer.style.display = 'none';
+        }
+
+        // Generate thumbnails
+        thumbnails.innerHTML = '';
+        destination.images.forEach((img, index) => {
+            const thumb = document.createElement('img');
+            thumb.src = img;
+            thumb.alt = `${destination.name} ${index + 1}`;
+            thumb.classList.add('thumbnail');
+            if (index === 0) thumb.classList.add('active');
+            thumb.addEventListener('click', () => {
+                mainImage.src = img;
+                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                thumb.classList.add('active');
+            });
+            thumbnails.appendChild(thumb);
+        });
+
+        // Set button actions
+        detailBtn.href = `detail.html?id=${destination.id}`;
+        
+        const isFavorite = this.favorites.includes(destination.id);
+        favoriteBtn.classList.toggle('active', isFavorite);
+        favoriteBtn.onclick = () => {
+            this.toggleFavorite(destination.id);
+            favoriteBtn.classList.toggle('active');
+        };
+
+        shareBtn.onclick = () => this.shareDestination(destination);
+        directionsBtn.onclick = () => this.getDirections(destination.coords);
+
+        // Show modal
+        modal.classList.add('active');
+    }
+
+    shareDestination(destination) {
+        const shareData = {
+            title: destination.name,
+            text: `Check out ${destination.name} - ${destination.description}`,
+            url: `${window.location.origin}${window.location.pathname.replace('map.html', '')}detail.html?id=${destination.id}`
+        };
+
+        if (navigator.share) {
+            navigator.share(shareData)
+                .then(() => window.showToast('Berhasil dibagikan', 'success'))
+                .catch(() => {});
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(shareData.url)
+                .then(() => window.showToast('Link disalin ke clipboard', 'success'))
+                .catch(() => window.showToast('Gagal menyalin link', 'error'));
+        }
+    }
+
+    getDirections(coords) {
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}`;
+        window.open(url, '_blank');
     }
 
     updateFavoritesCount() {

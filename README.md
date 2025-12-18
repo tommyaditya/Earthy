@@ -1,6 +1,10 @@
-# Peta Pariwisata Interaktif
+# 🗺️ Tourism Map - Peta Wisata Indonesia
 
-Sebuah aplikasi web interaktif untuk menjelajahi destinasi wisata terbaik di Indonesia. Dibangun dengan teknologi modern untuk pengalaman pengguna yang optimal.
+![Tourism Map](https://img.shields.io/badge/version-2.0-blue.svg)
+![PHP](https://img.shields.io/badge/PHP-7.4%2B-blue.svg)
+![License](https://img.shields.io/badge/license-MIT-green.svg)
+
+Aplikasi web interaktif untuk menjelajahi destinasi wisata di Indonesia dengan peta interaktif, sistem filter canggih, dan panel admin untuk mengelola konten.
 
 ## ✨ Fitur Utama
 
@@ -177,3 +181,6 @@ Jika Anda mengalami masalah atau memiliki pertanyaan:
 **Dibuat dengan ❤️ untuk Indonesia**
 
 *Menjelajahi keindahan nusantara, satu destinasi dalam satu waktu.*
+=======
+# WildRoute
+>>>>>>> baeceb3f307dd2b571285c9838fd302e5d086265

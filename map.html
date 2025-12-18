@@ -97,6 +97,71 @@
                 </div>
 
                 <div class="filter-group">
+                    <h4>Filter Harga</h4>
+                    <div class="price-range">
+                        <label>
+                            <span id="price-value">Rp 0 - Rp 500.000</span>
+                            <input type="range" id="price-slider" min="0" max="500000" step="10000" value="500000">
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Filter Jarak</h4>
+                    <div class="distance-range">
+                        <label>
+                            <span id="distance-value">0 - 100 km</span>
+                            <input type="range" id="distance-slider" min="0" max="100" step="5" value="100">
+                        </label>
+                        <small>Dari lokasi Anda saat ini</small>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Fasilitas</h4>
+                    <div class="facilities-filters">
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="parking">
+                            <span><i class="fas fa-parking"></i> Parkir</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="toilet">
+                            <span><i class="fas fa-restroom"></i> Toilet</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="restaurant">
+                            <span><i class="fas fa-utensils"></i> Restoran</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="wifi">
+                            <span><i class="fas fa-wifi"></i> WiFi</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="mushola">
+                            <span><i class="fas fa-mosque"></i> Mushola</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <h4>Aksesibilitas</h4>
+                    <div class="accessibility-filters">
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="wheelchair">
+                            <span><i class="fas fa-wheelchair"></i> Wheelchair Accessible</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="parking">
+                            <span><i class="fas fa-parking"></i> Disabled Parking</span>
+                        </label>
+                        <label class="checkbox-option">
+                            <input type="checkbox" value="disabled-toilet">
+                            <span><i class="fas fa-restroom"></i> Disabled Toilet</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="filter-group">
                     <h4>List Pariwisata</h4>
                     <div class="tourism-list">
                         <!-- Tourism list will be populated by JavaScript -->
@@ -136,6 +201,87 @@
             </div>
             <div id="weather-content" class="weather-content">
                 <!-- Weather data will be populated by JavaScript -->
+            </div>
+        </div>
+
+        <!-- Quick View Modal -->
+        <div id="modal-quick-view" class="modal">
+            <div class="modal-content modal-quick-view">
+                <div class="modal-header">
+                    <h3 id="quick-view-title">Detail Destinasi</h3>
+                    <button class="modal-close" aria-label="Close modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="quick-view-gallery">
+                        <div class="main-image-container">
+                            <img id="quick-view-main-image" src="" alt="Destination image">
+                        </div>
+                        <div class="thumbnail-gallery" id="quick-view-thumbnails">
+                            <!-- Thumbnails will be populated by JavaScript -->
+                        </div>
+                    </div>
+                    <div class="quick-view-info">
+                        <div class="quick-view-header">
+                            <div class="rating-badge">
+                                <i class="fas fa-star"></i>
+                                <span id="quick-view-rating">0</span>
+                            </div>
+                            <div class="category-badge" id="quick-view-category">
+                                <!-- Category will be populated -->
+                            </div>
+                        </div>
+                        <p class="quick-view-location">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span id="quick-view-location">Location</span>
+                        </p>
+                        <p class="quick-view-description" id="quick-view-description">
+                            Description will be loaded here...
+                        </p>
+                        <div class="quick-view-details">
+                            <div class="detail-item">
+                                <i class="fas fa-clock"></i>
+                                <div>
+                                    <strong>Jam Buka</strong>
+                                    <p id="quick-view-hours">-</p>
+                                </div>
+                            </div>
+                            <div class="detail-item">
+                                <i class="fas fa-tag"></i>
+                                <div>
+                                    <strong>Harga Tiket</strong>
+                                    <p id="quick-view-price">-</p>
+                                </div>
+                            </div>
+                            <div class="detail-item" id="quick-view-contact-container" style="display: none;">
+                                <i class="fas fa-phone"></i>
+                                <div>
+                                    <strong>Kontak</strong>
+                                    <p id="quick-view-contact">-</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quick-view-actions">
+                            <a href="#" id="quick-view-detail-btn" class="btn btn-primary">
+                                <i class="fas fa-info-circle"></i>
+                                Lihat Detail
+                            </a>
+                            <button class="btn btn-secondary" id="quick-view-favorite-btn">
+                                <i class="fas fa-heart"></i>
+                                Favorit
+                            </button>
+                            <button class="btn btn-secondary" id="quick-view-share-btn">
+                                <i class="fas fa-share-alt"></i>
+                                Bagikan
+                            </button>
+                            <button class="btn btn-secondary" id="quick-view-directions-btn">
+                                <i class="fas fa-directions"></i>
+                                Petunjuk Arah
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
