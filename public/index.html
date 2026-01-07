@@ -1,13 +1,12 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <base href="/Maps/public/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Pariwisata Interaktif - Jelajahi Indonesia</title>
     <meta name="description" content="Temukan destinasi wisata terbaik di Indonesia dengan peta interaktif kami. Cari, filter, dan simpan favorit Anda.">
-    <link rel="stylesheet" href="../assets/css/style.css">
-    <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="/assets/css/style.css">
+    <link rel="icon" href="/assets/images/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -26,10 +25,10 @@
                     <li><a href="#home" class="nav-link active">Beranda</a></li>
                     <li><a href="#features" class="nav-link">Fitur</a></li>
                     <li><a href="#about" class="nav-link">Tentang</a></li>
-                    <li><a href="map.html" class="nav-link btn-primary">Jelajahi Peta</a></li>
+                    <li><a href="/public/map.html" class="nav-link btn-primary">Jelajahi Peta</a></li>
                     <li id="auth-menu">
                         <!-- Will be dynamically updated by JavaScript -->
-                        <a href="../admin/login.php" class="nav-link" id="login-link">
+                        <a href="/admin/login.php" class="nav-link" id="login-link">
                             <i class="fas fa-sign-in-alt"></i> Login
                         </a>
                     </li>
@@ -45,7 +44,7 @@
                     <h1>Jelajahi Keindahan Indonesia</h1>
                     <p>Temukan destinasi wisata terbaik dengan peta interaktif kami. Cari, filter, dan simpan tempat favorit Anda untuk perjalanan yang tak terlupakan.</p>
                     <div class="hero-buttons">
-                        <a href="map.html" class="btn btn-primary btn-large">
+                        <a href="/public/map.html" class="btn btn-primary btn-large">
                             <i class="fas fa-map-marker-alt"></i>
                             Mulai Jelajah
                         </a>
@@ -56,7 +55,7 @@
                     </div>
                 </div>
                 <div class="hero-image">
-                    <img src="../assets/images/raja-ampat.jpg" alt="Peta Indonesia dengan marker destinasi wisata" loading="lazy">
+                        <img src="/assets/images/raja-ampat.jpg" alt="Peta Indonesia dengan marker destinasi wisata" loading="lazy">
                 </div>
             </div>
         </section>
@@ -121,13 +120,13 @@
                         <h2>Tentang Peta Pariwisata</h2>
                         <p>Peta Pariwisata Interaktif adalah platform digital yang dirancang untuk membantu wisatawan menjelajahi keindahan Indonesia dengan lebih mudah dan efisien. Dengan teknologi peta interaktif terkini, kami menyediakan informasi lengkap tentang destinasi wisata terbaik di seluruh nusantara.</p>
                         <p>Mulai dari gunung berapi yang megah hingga pantai yang indah, dari candi kuno hingga kuliner khas daerah, semua dapat Anda temukan dalam satu platform yang user-friendly.</p>
-                        <a href="map.html" class="btn btn-primary">
+                        <a href="/public/map.html" class="btn btn-primary">
                             <i class="fas fa-compass"></i>
                             Mulai Petualangan
                         </a>
                     </div>
                     <div class="about-image">
-                        <img src="../assets/images/gunung-bromo.jpg" alt="Keindahan alam Indonesia" loading="lazy">
+                        <img src="/assets/images/gunung-bromo.jpg" alt="Keindahan alam Indonesia" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -145,7 +144,7 @@
                     <a href="#home">Beranda</a>
                     <a href="#features">Fitur</a>
                     <a href="#about">Tentang</a>
-                    <a href="map.html">Peta</a>
+                    <a href="/public/map.html">Peta</a>
                 </div>
                 <div class="footer-social">
                     <a href="#" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
@@ -159,12 +158,12 @@
         </div>
     </footer>
 
-    <script src="../assets/js/main.js"></script>
+    <script src="/assets/js/main.js"></script>
     <script>
         // Check user session and update navbar
         async function updateNavbar() {
             try {
-                const response = await fetch('api/session.php');
+                const response = await fetch('/api/session.php');
                 const data = await response.json();
                 
                 const authMenu = document.getElementById('auth-menu');
@@ -182,8 +181,8 @@
                                 <i class="fas fa-chevron-down"></i>
                             </a>
                             <div class="user-dropdown" id="user-dropdown">
-                                ${isAdmin ? '<a href="../admin/index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>' : ''}
-                                <a href="../user/profile.php"><i class="fas fa-user"></i> Profile</a>
+                                ${isAdmin ? '<a href="/admin/index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>' : ''}
+                                <a href="/user/profile.php"><i class="fas fa-user"></i> Profile</a>
                                 <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
                             </div>
                         </div>
@@ -209,7 +208,7 @@
                     document.getElementById('logout-btn').addEventListener('click', async (e) => {
                         e.preventDefault();
                         try {
-                            await fetch('api/auth.php?action=logout');
+                            await fetch('/api/auth.php?action=logout');
                             window.location.reload();
                         } catch (error) {
                             console.error('Logout failed:', error);
