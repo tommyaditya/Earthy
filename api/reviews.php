@@ -59,31 +59,44 @@ try {
                   VALUES (:destination_id, :user_name, :user_email, :rating, :comment)";
         
         $stmt = $db->prepare($query);
-        $stmt->bindParam(':destination_id', $data->destination_id);
-        $stmt->bindParam(':user_name', $data->user_name);
+        $stmt->bindParam(':destination_id', $data->destination_id, PDO::PARAM_INT);
+        $stmt->bindParam(':user_name', $data->user_name, PDO::PARAM_STR);
         
         $email = isset($data->user_email) ? $data->user_email : null;
-        $stmt->bindParam(':user_email', $email);
-        $stmt->bindParam(':rating', $data->rating);
+        $stmt->bindParam(':user_email', $email, PDO::PARAM_STR);
+        $stmt->bindParam(':rating', $data->rating, PDO::PARAM_INT);
         
         $comment = isset($data->comment) ? $data->comment : null;
-        $stmt->bindParam(':comment', $comment);
+        $stmt->bindParam(':comment', $comment, PDO::PARAM_STR);
         
         $stmt->execute();
         
+        $reviewId = $db->lastInsertId();
+        
         // Update destination average rating
         $updateRatingQuery = "UPDATE destinations 
-                              SET rating = (SELECT AVG(rating) FROM reviews WHERE destination_id = :destination_id)
-                              WHERE id = :destination_id";
+                              SET rating = (SELECT AVG(rating) FROM reviews WHERE destination_id = :dest_id)
+                              WHERE id = :dest_id2";
         $updateStmt = $db->prepare($updateRatingQuery);
-        $updateStmt->bindParam(':destination_id', $data->destination_id);
+        $updateStmt->bindValue(':dest_id', $data->destination_id, PDO::PARAM_INT);
+        $updateStmt->bindValue(':dest_id2', $data->destination_id, PDO::PARAM_INT);
         $updateStmt->execute();
+        
+        // Get the updated average rating
+        $avgQuery = "SELECT AVG(rating) as avg_rating FROM reviews WHERE destination_id = :destination_id";
+        $avgStmt = $db->prepare($avgQuery);
+        $avgStmt->bindParam(':destination_id', $data->destination_id, PDO::PARAM_INT);
+        $avgStmt->execute();
+        $avgResult = $avgStmt->fetch();
         
         http_response_code(201);
         echo json_encode([
             'success' => true,
             'message' => 'Review submitted successfully',
-            'data' => ['id' => $db->lastInsertId()]
+            'data' => [
+                'id' => $reviewId,
+                'new_average_rating' => round($avgResult['avg_rating'], 1)
+            ]
         ]);
     }
     

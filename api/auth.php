@@ -29,8 +29,8 @@ try {
             throw new Exception('Username dan password harus diisi');
         }
         
-        $query = "SELECT id, username, email, password_hash, full_name, role, is_active 
-                  FROM admin_users 
+        $query = "SELECT id, username, email, password, full_name, role, is_active, profile_picture 
+                  FROM users 
                   WHERE username = :username AND is_active = 1";
         
         $stmt = $db->prepare($query);
@@ -49,7 +49,7 @@ try {
         }
         
         // Verify password
-        if (!password_verify($data->password, $user['password_hash'])) {
+        if (!password_verify($data->password, $user['password'])) {
             http_response_code(401);
             echo json_encode([
                 'success' => false,
@@ -58,24 +58,33 @@ try {
             exit;
         }
         
-        // Set session
-        $_SESSION['admin_id'] = $user['id'];
-        $_SESSION['admin_username'] = $user['username'];
-        $_SESSION['admin_email'] = $user['email'];
-        $_SESSION['admin_name'] = $user['full_name'];
-        $_SESSION['admin_role'] = $user['role'];
-        $_SESSION['admin_logged_in'] = true;
+        // Set session based on role
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['email'] = $user['email'];
+        $_SESSION['full_name'] = $user['full_name'];
+        $_SESSION['role'] = $user['role'];
+        $_SESSION['logged_in'] = true;
+        $_SESSION['profile_picture'] = $user['profile_picture'];
         
-        // Update last login
-        $updateQuery = "UPDATE admin_users SET last_login = NOW() WHERE id = :id";
-        $updateStmt = $db->prepare($updateQuery);
-        $updateStmt->bindParam(':id', $user['id']);
-        $updateStmt->execute();
+        // For backward compatibility with existing admin pages
+        if ($user['role'] === 'admin') {
+            $_SESSION['admin_id'] = $user['id'];
+            $_SESSION['admin_username'] = $user['username'];
+            $_SESSION['admin_email'] = $user['email'];
+            $_SESSION['admin_name'] = $user['full_name'];
+            $_SESSION['admin_role'] = $user['role'];
+            $_SESSION['admin_logged_in'] = true;
+        }
+        
+        // Determine redirect URL based on role (relative to login page location)
+        $redirectUrl = $user['role'] === 'admin' ? 'index.php' : '../public/index.html';
         
         http_response_code(200);
         echo json_encode([
             'success' => true,
             'message' => 'Login berhasil',
+            'redirect' => $redirectUrl,
             'data' => [
                 'id' => $user['id'],
                 'username' => $user['username'],

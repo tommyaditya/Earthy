@@ -127,25 +127,25 @@ class TourismMap {
         this.clearMarkers();
 
         try {
-            // Load GeoJSON data
-            const response = await fetch('data/map.geojson');
+            // Load data from API
+            const response = await fetch('../api/destinations.php');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
-            const geoJsonData = await response.json();
+            const result = await response.json();
 
-            // Convert GeoJSON features to destination format
-            this.tourismData = geoJsonData.features.map(feature => ({
-                id: feature.properties.id,
-                name: feature.properties.nama,
-                category: feature.properties.kategori.toLowerCase(),
-                location: feature.properties.location,
-                coords: [feature.geometry.coordinates[1], feature.geometry.coordinates[0]], // GeoJSON is [lng, lat]
-                rating: feature.properties.rating,
-                description: feature.properties.long_desc,
-                hours: feature.properties.hours,
-                price: feature.properties.price,
-                images: feature.properties.images || []
+            // Convert API response to destination format
+            this.tourismData = result.data.map(dest => ({
+                id: dest.id,
+                name: dest.name,
+                category: dest.category,
+                location: dest.location,
+                coords: [parseFloat(dest.latitude), parseFloat(dest.longitude)],
+                rating: dest.rating || 0,
+                description: dest.description,
+                hours: dest.opening_hours || '-',
+                price: dest.ticket_price || '-',
+                images: dest.primary_image ? [dest.primary_image] : []
             }));
 
             const filteredData = this.getFilteredData();

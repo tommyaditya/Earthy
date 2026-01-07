@@ -38,15 +38,12 @@ try {
                 d.rating,
                 d.opening_hours,
                 d.ticket_price,
-                d.contact,
-                d.website,
                 d.facilities,
                 d.accessibility,
                 d.featured,
+                d.images,
                 GROUP_CONCAT(DISTINCT t.name) as tags,
-                GROUP_CONCAT(DISTINCT t.slug) as tag_slugs,
-                (SELECT image_url FROM destination_images WHERE destination_id = d.id AND is_primary = 1 LIMIT 1) as primary_image,
-                (SELECT GROUP_CONCAT(image_url) FROM destination_images WHERE destination_id = d.id ORDER BY display_order) as images
+                GROUP_CONCAT(DISTINCT t.slug) as tag_slugs
               FROM destinations d
               LEFT JOIN destination_tags dt ON d.id = dt.destination_id
               LEFT JOIN tags t ON dt.tag_id = t.id
@@ -127,8 +124,8 @@ try {
         $destination['tags'] = $destination['tags'] ? explode(',', $destination['tags']) : [];
         $destination['tag_slugs'] = $destination['tag_slugs'] ? explode(',', $destination['tag_slugs']) : [];
         
-        // Convert images to array
-        $destination['images'] = $destination['images'] ? explode(',', $destination['images']) : [];
+        // Parse images JSON to array
+        $destination['images'] = $destination['images'] ? json_decode($destination['images']) : [];
         
         // Convert numeric strings to proper types
         $destination['latitude'] = floatval($destination['latitude']);

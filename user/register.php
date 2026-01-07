@@ -2,8 +2,12 @@
 session_start();
 
 // Redirect if already logged in
-if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
-    header('Location: index.php');
+if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
+    if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
+        header('Location: ../admin/index.php');
+    } else {
+        header('Location: ../public/index.html');
+    }
     exit;
 }
 ?>
@@ -12,7 +16,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login Admin - Tourism Map</title>
+    <title>Daftar - Tourism Map</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
@@ -50,7 +54,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             -ms-overflow-style: none;
         }
 
-        .login-page {
+        .register-page {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -61,14 +65,9 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             overflow: auto;
         }
 
-        /* Extra content for scrolling */
-        .extra-content {
-            height: 0;
-        }
-
         /* Animated gradient orbs */
-        .login-page::before,
-        .login-page::after {
+        .register-page::before,
+        .register-page::after {
             content: '';
             position: absolute;
             border-radius: 50%;
@@ -77,7 +76,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             animation: float 20s infinite ease-in-out;
         }
 
-        .login-page::before {
+        .register-page::before {
             width: 400px;
             height: 400px;
             background: radial-gradient(circle, rgba(99, 102, 241, 0.4) 0%, transparent 70%);
@@ -85,7 +84,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             left: -100px;
         }
 
-        .login-page::after {
+        .register-page::after {
             width: 500px;
             height: 500px;
             background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 70%);
@@ -124,9 +123,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             100% { transform: translateY(50px); }
         }
 
-
-
-        .login-container {
+        .register-container {
             position: relative;
             z-index: 10;
             width: 100%;
@@ -134,7 +131,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             margin: 0 auto;
         }
 
-        .login-box {
+        .register-box {
             background: rgba(255, 255, 255, 0.98);
             backdrop-filter: blur(20px);
             border-radius: 24px;
@@ -146,7 +143,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             animation: slideUp 0.6s ease-out;
         }
 
-        .login-box::before {
+        .register-box::before {
             content: '';
             position: absolute;
             inset: -2px;
@@ -162,7 +159,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             transition: opacity 0.3s ease;
         }
 
-        .login-box:hover::before {
+        .register-box:hover::before {
             opacity: 1;
         }
 
@@ -177,21 +174,21 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             }
         }
 
-        .login-header {
+        .register-header {
             text-align: center;
-            margin-bottom: 40px;
+            margin-bottom: 35px;
         }
 
         .logo {
-            width: 90px;
-            height: 90px;
+            width: 80px;
+            height: 80px;
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 25px;
-            font-size: 42px;
+            margin: 0 auto 20px;
+            font-size: 38px;
             color: white;
             box-shadow: 
                 0 10px 30px rgba(99, 102, 241, 0.4),
@@ -212,21 +209,21 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
         }
 
-        .login-header h1 {
+        .register-header h1 {
             color: var(--dark);
-            font-size: 32px;
+            font-size: 28px;
             font-weight: 800;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             letter-spacing: -0.5px;
         }
 
-        .login-header p {
+        .register-header p {
             color: #64748b;
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 400;
         }
 
-        .login-form {
+        .register-form {
             animation: fadeIn 0.6s ease 0.3s both;
         }
 
@@ -236,33 +233,34 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
         }
 
         .form-group {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
         }
 
         .form-group label {
             display: block;
             color: var(--dark);
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             letter-spacing: 0.2px;
         }
 
         .form-group label i {
-            margin-right: 8px;
+            margin-right: 6px;
             color: var(--primary);
-            font-size: 14px;
+            font-size: 13px;
         }
 
         .form-group input[type="text"],
+        .form-group input[type="email"],
         .form-group input[type="password"] {
             width: 100%;
-            padding: 14px 18px;
+            padding: 12px 16px;
             border: 2px solid #e2e8f0;
             background: #f8fafc;
             border-radius: 12px;
             color: var(--dark);
-            font-size: 15px;
+            font-size: 14px;
             font-weight: 500;
             transition: all 0.3s ease;
             font-family: 'Poppins', sans-serif;
@@ -306,45 +304,26 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             background: #f1f5f9;
         }
 
-        .checkbox-label {
-            display: flex;
-            align-items: center;
-            color: var(--dark);
-            font-size: 14px;
-            cursor: pointer;
-            user-select: none;
-            font-weight: 500;
-        }
-
-        .checkbox-label input[type="checkbox"] {
-            margin-right: 10px;
-            width: 18px;
-            height: 18px;
-            cursor: pointer;
-            accent-color: var(--primary);
-        }
-
         .btn-primary {
             width: 100%;
-            padding: 16px;
+            padding: 14px;
             background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
             color: white;
             border: none;
             border-radius: 12px;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             box-shadow: 
                 0 8px 20px rgba(99, 102, 241, 0.3),
                 0 2px 4px rgba(0, 0, 0, 0.1);
-            margin-top: 10px;
+            margin-top: 8px;
             position: relative;
             overflow: hidden;
             font-family: 'Poppins', sans-serif;
         }
 
-        /* Button shine effect */
         .btn-primary::before {
             content: '';
             position: absolute;
@@ -384,10 +363,10 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
         }
 
         .alert {
-            padding: 14px 18px;
+            padding: 12px 16px;
             border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 14px;
+            margin-bottom: 18px;
+            font-size: 13px;
             font-weight: 500;
             animation: slideDown 0.4s ease;
         }
@@ -415,30 +394,31 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             border: 1.5px solid #6ee7b7;
         }
 
-        .login-footer {
-            margin-top: 32px;
+        .register-footer {
+            margin-top: 28px;
             text-align: center;
         }
 
-        .login-footer p {
+        .register-footer p {
             color: #64748b;
             font-size: 13px;
-            margin-bottom: 16px;
-            font-weight: 500;
+            margin-bottom: 12px;
         }
 
-        .login-footer strong {
+        .register-footer a {
             color: var(--primary);
-            font-weight: 700;
-            background: #eef2ff;
-            padding: 2px 8px;
-            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .register-footer a:hover {
+            text-decoration: underline;
         }
 
         .back-link {
             color: var(--primary);
             text-decoration: none;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.3s ease;
             display: inline-flex;
@@ -447,6 +427,7 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             padding: 8px 16px;
             border-radius: 10px;
             background: #f1f5f9;
+            margin-top: 8px;
         }
 
         .back-link:hover {
@@ -456,51 +437,67 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
         }
 
         .back-link i {
-            font-size: 13px;
+            font-size: 12px;
         }
 
         /* Responsive */
         @media (max-width: 480px) {
-            .login-box {
-                padding: 40px 30px;
+            .register-box {
+                padding: 35px 28px;
             }
 
-            .login-header h1 {
-                font-size: 26px;
+            .register-header h1 {
+                font-size: 24px;
             }
 
             .logo {
-                width: 75px;
-                height: 75px;
+                width: 70px;
+                height: 70px;
             }
 
             .logo i {
-                font-size: 36px;
+                font-size: 34px;
             }
-
         }
     </style>
 </head>
-<body class="login-page">
+<body class="register-page">
     <!-- Grid Background -->
     <div class="grid-background"></div>
 
-    <div class="login-container">
-        <div class="login-box" id="loginBox">
-            <div class="login-header">
+    <div class="register-container">
+        <div class="register-box" id="registerBox">
+            <div class="register-header">
                 <div class="logo">
-                    <i class="fas fa-map-marked-alt"></i>
+                    <i class="fas fa-user-plus"></i>
                 </div>
-                <h1>Tourism Map Admin</h1>
+                <h1>Daftar Akun</h1>
+                <p>Buat akun untuk mengakses fitur Tourism Map</p>
             </div>
             
-            <form id="login-form" class="login-form">
+            <form id="register-form" class="register-form">
                 <div class="form-group">
                     <label for="username">
                         <i class="fas fa-user"></i>
                         Username
                     </label>
-                    <input type="text" id="username" name="username" required autocomplete="username" autofocus>
+                    <input type="text" id="username" name="username" required autocomplete="username" autofocus placeholder="Masukkan username">
+                </div>
+
+                <div class="form-group">
+                    <label for="email">
+                        <i class="fas fa-envelope"></i>
+                        Email
+                    </label>
+                    <input type="email" id="email" name="email" required autocomplete="email" placeholder="Masukkan email">
+                </div>
+
+                <div class="form-group">
+                    <label for="full_name">
+                        <i class="fas fa-id-card"></i>
+                        Nama Lengkap (Opsional)
+                    </label>
+                    <input type="text" id="full_name" name="full_name" autocomplete="name" placeholder="Masukkan nama lengkap">
                 </div>
                 
                 <div class="form-group">
@@ -509,41 +506,48 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
                         Password
                     </label>
                     <div class="password-input">
-                        <input type="password" id="password" name="password" required autocomplete="current-password">
-                        <button type="button" class="toggle-password" onclick="togglePassword()">
-                            <i class="fas fa-eye" id="eye-icon"></i>
+                        <input type="password" id="password" name="password" required autocomplete="new-password" placeholder="Minimal 6 karakter">
+                        <button type="button" class="toggle-password" onclick="togglePassword('password')">
+                            <i class="fas fa-eye" id="eye-icon-password"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">
+                        <i class="fas fa-lock"></i>
+                        Konfirmasi Password
+                    </label>
+                    <div class="password-input">
+                        <input type="password" id="confirm_password" name="confirm_password" required autocomplete="new-password" placeholder="Ulangi password">
+                        <button type="button" class="toggle-password" onclick="togglePassword('confirm_password')">
+                            <i class="fas fa-eye" id="eye-icon-confirm"></i>
                         </button>
                     </div>
                 </div>
                 
-                <div class="form-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" name="remember">
-                        <span>Ingat saya</span>
-                    </label>
-                </div>
-                
                 <div id="alert-message" class="alert" style="display: none;"></div>
                 
-                <button type="submit" class="btn btn-primary btn-block" id="login-btn">
-                    <i class="fas fa-sign-in-alt"></i>
-                    Login
+                <button type="submit" class="btn btn-primary btn-block" id="register-btn">
+                    <i class="fas fa-user-plus"></i>
+                    Daftar
                 </button>
             </form>
             
-            <div class="login-footer">
+            <div class="register-footer">
+                <p>Sudah punya akun? <a href="../admin/login.php">Login di sini</a></p>
                 <a href="../index.html" class="back-link">
                     <i class="fas fa-arrow-left"></i>
-                    Kembali ke Website
+                    Kembali ke Beranda
                 </a>
             </div>
         </div>
     </div>
 
     <script>
-        function togglePassword() {
-            const passwordInput = document.getElementById('password');
-            const eyeIcon = document.getElementById('eye-icon');
+        function togglePassword(fieldId) {
+            const passwordInput = document.getElementById(fieldId);
+            const eyeIcon = document.getElementById('eye-icon-' + (fieldId === 'password' ? 'password' : 'confirm'));
             
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
@@ -556,68 +560,70 @@ if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
             }
         }
 
-        function showAlert(message, type = 'error') {
-            const alert = document.getElementById('alert-message');
-            alert.className = `alert alert-${type}`;
-            alert.textContent = message;
-            alert.style.display = 'block';
+        function showAlert(message, type) {
+            const alertBox = document.getElementById('alert-message');
+            alertBox.className = `alert alert-${type}`;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
             
             setTimeout(() => {
-                alert.style.display = 'none';
+                alertBox.style.display = 'none';
             }, 5000);
         }
 
-        document.getElementById('login-form').addEventListener('submit', async (e) => {
+        document.getElementById('register-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const loginBtn = document.getElementById('login-btn');
+            const registerBtn = document.getElementById('register-btn');
             const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirm_password').value;
+            const fullName = document.getElementById('full_name').value;
+            
+            // Validate password match
+            if (password !== confirmPassword) {
+                showAlert('Password dan konfirmasi password tidak cocok', 'error');
+                return;
+            }
             
             // Show loading
-            loginBtn.disabled = true;
-            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Logging in...';
+            registerBtn.disabled = true;
+            registerBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';
             
             try {
-                console.log('Attempting login with:', { username }); // Debug log
-                
-                const response = await fetch('../api/auth.php', {
+                const response = await fetch('../api/register.php', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ username, password })
+                    body: JSON.stringify({ 
+                        username, 
+                        email, 
+                        password,
+                        full_name: fullName 
+                    })
                 });
                 
-                console.log('Response status:', response.status); // Debug log
-                
                 const result = await response.json();
-                console.log('Response data:', result); // Debug log
                 
                 if (result.success) {
-                    showAlert('Login berhasil! Redirecting...', 'success');
+                    showAlert('Registrasi berhasil! Mengalihkan ke halaman login...', 'success');
                     setTimeout(() => {
-                        // Redirect based on role from server response
-                        window.location.href = result.redirect || 'index.php';
-                    }, 1000);
+                        window.location.href = '../admin/login.php';
+                    }, 2000);
                 } else {
-                    showAlert(result.message || 'Login gagal', 'error');
-                    console.error('Login failed:', result); // Debug log
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                    showAlert(result.message || 'Registrasi gagal', 'error');
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Daftar';
                 }
                 
             } catch (error) {
                 console.error('Error:', error);
-                showAlert('Terjadi kesalahan. Silakan coba lagi. Check console for details.', 'error');
-                loginBtn.disabled = false;
-                loginBtn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                showAlert('Terjadi kesalahan. Silakan coba lagi.', 'error');
+                registerBtn.disabled = false;
+                registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Daftar';
             }
-        });
-        
-        // Initialize on load
-        window.addEventListener('DOMContentLoaded', () => {
-            // Removed troubleshoot link
         });
     </script>
 </body>

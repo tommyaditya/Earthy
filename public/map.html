@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <base href="/Maps/public/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Pariwisata Interaktif - Jelajahi Indonesia</title>
     <meta name="description" content="Peta interaktif destinasi wisata Indonesia dengan fitur pencarian, filter, dan favorit.">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="stylesheet" href="assets/css/map.css">
-    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="stylesheet" href="../assets/css/map.css">
+    <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
@@ -93,78 +94,6 @@
                             <input type="checkbox" value="1">
                             <span class="rating-stars">★1</span>
                         </label>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4>Filter Harga</h4>
-                    <div class="price-range">
-                        <label>
-                            <span id="price-value">Rp 0 - Rp 500.000</span>
-                            <input type="range" id="price-slider" min="0" max="500000" step="10000" value="500000">
-                        </label>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4>Filter Jarak</h4>
-                    <div class="distance-range">
-                        <label>
-                            <span id="distance-value">0 - 100 km</span>
-                            <input type="range" id="distance-slider" min="0" max="100" step="5" value="100">
-                        </label>
-                        <small>Dari lokasi Anda saat ini</small>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4>Fasilitas</h4>
-                    <div class="facilities-filters">
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="parking">
-                            <span><i class="fas fa-parking"></i> Parkir</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="toilet">
-                            <span><i class="fas fa-restroom"></i> Toilet</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="restaurant">
-                            <span><i class="fas fa-utensils"></i> Restoran</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="wifi">
-                            <span><i class="fas fa-wifi"></i> WiFi</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="mushola">
-                            <span><i class="fas fa-mosque"></i> Mushola</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4>Aksesibilitas</h4>
-                    <div class="accessibility-filters">
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="wheelchair">
-                            <span><i class="fas fa-wheelchair"></i> Wheelchair Accessible</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="parking">
-                            <span><i class="fas fa-parking"></i> Disabled Parking</span>
-                        </label>
-                        <label class="checkbox-option">
-                            <input type="checkbox" value="disabled-toilet">
-                            <span><i class="fas fa-restroom"></i> Disabled Toilet</span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="filter-group">
-                    <h4>List Pariwisata</h4>
-                    <div class="tourism-list">
-                        <!-- Tourism list will be populated by JavaScript -->
                     </div>
                 </div>
             </div>
@@ -303,7 +232,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.markercluster@1.5.3/dist/leaflet.markercluster.js"></script>
-    <script src="assets/js/main.js"></script>
-    <script src="assets/js/map.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script src="../assets/js/map.js"></script>
 </body>
 </html>

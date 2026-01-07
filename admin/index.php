@@ -7,6 +7,14 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
     exit;
 }
 
+// Check if user has admin role
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    // User is logged in but not an admin, deny access
+    session_destroy();
+    header('Location: login.php?error=unauthorized');
+    exit;
+}
+
 $admin_name = $_SESSION['admin_name'] ?? $_SESSION['admin_username'];
 $admin_email = $_SESSION['admin_email'] ?? '';
 ?>
@@ -16,11 +24,16 @@ $admin_email = $_SESSION['admin_email'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Tourism Map</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" href="assets/css/admin.css">
+    <link rel="stylesheet" href="assets/css/admin-new.css">
 </head>
 <body class="admin-panel">
+    <!-- Mobile Menu Toggle -->
+    <button class="mobile-menu-toggle" onclick="toggleSidebar()" aria-label="Toggle Menu">
+        <i class="fas fa-bars"></i>
+    </button>
+    
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
@@ -315,5 +328,6 @@ $admin_email = $_SESSION['admin_email'] ?? '';
         // Load data on page load
         loadDashboardData();
     </script>
+    <script src="assets/js/admin-common.js"></script>
 </body>
 </html>

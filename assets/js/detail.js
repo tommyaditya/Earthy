@@ -23,24 +23,27 @@ class DestinationDetail {
         try {
             this.showLoading();
 
-            const response = await fetch('data/map.geojson');
+            console.log('Loading destination ID:', this.destinationId);
+            const apiUrl = `../api/destination.php?id=${this.destinationId}`;
+            console.log('Fetching from:', apiUrl);
+            
+            const response = await fetch(apiUrl);
+            console.log('Response status:', response.status);
+            
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
-            const geoJsonData = await response.json();
+            const result = await response.json();
+            console.log('API result:', result);
 
-            // Find the destination by ID
-            const destination = geoJsonData.features.find(feature =>
-                feature.properties.id === this.destinationId
-            );
-
-            if (!destination) {
+            if (!result.success || !result.data) {
                 throw new Error('Destination not found');
             }
 
-            this.destinationData = destination.properties;
+            this.destinationData = result.data;
             this.renderDestinationDetail();
+            this.loadReviews();
 
         } catch (error) {
             console.error('Error loading destination data:', error);
@@ -67,23 +70,27 @@ class DestinationDetail {
 
         // Set main image
         const mainImage = document.getElementById('main-image');
-        mainImage.src = this.destinationData.images[0];
-        mainImage.alt = this.destinationData.nama;
+        if (this.destinationData.primary_image) {
+            mainImage.src = 'uploads/destinations/' + this.destinationData.primary_image;
+        } else {
+            mainImage.src = 'assets/images/placeholder.jpg';
+        }
+        mainImage.alt = this.destinationData.name;
 
         // Set hero content
-        document.getElementById('hero-title').textContent = this.destinationData.nama;
+        document.getElementById('hero-title').textContent = this.destinationData.name;
         document.getElementById('hero-category').innerHTML = `
             <i class="fas fa-tag"></i>
-            <span>${this.destinationData.kategori}</span>
+            <span>${this.destinationData.category}</span>
         `;
 
         // Set location, hours, price
         document.getElementById('location-text').textContent = this.destinationData.location;
-        document.getElementById('hours-text').textContent = this.destinationData.hours;
-        document.getElementById('price-text').textContent = this.destinationData.price;
+        document.getElementById('hours-text').textContent = this.destinationData.opening_hours || '-';
+        document.getElementById('price-text').textContent = this.destinationData.ticket_price || 'Gratis';
 
         // Set description
-        document.getElementById('description-text').textContent = this.destinationData.long_desc;
+        document.getElementById('description-text').textContent = this.destinationData.long_description || this.destinationData.description;
 
         // Set rating
         this.renderRating();
@@ -100,12 +107,25 @@ class DestinationDetail {
 
     renderGallery() {
         const galleryGrid = document.getElementById('gallery-grid');
+        if (!galleryGrid) return;
+        
         galleryGrid.innerHTML = '';
 
-        this.destinationData.images.forEach((image, index) => {
+        // Get images from API response
+        const images = this.destinationData.images || [];
+        
+        if (images.length === 0) {
+            galleryGrid.innerHTML = '<p>Tidak ada galeri foto tersedia</p>';
+            return;
+        }
+
+        images.forEach((imageObj, index) => {
+            // Handle both string URLs and object with image_url property
+            const imagePath = typeof imageObj === 'string' ? imageObj : imageObj.image_url;
             const galleryItem = document.createElement('div');
             galleryItem.className = 'gallery-item';
-            galleryItem.innerHTML = `<img src="${image}" alt="Gallery image ${index + 1}">`;
+            // Use imagePath directly - it's already a full URL or relative path
+            galleryItem.innerHTML = `<img src="${imagePath}" alt="Gallery image ${index + 1}">`;
             galleryItem.addEventListener('click', () => this.openImageModal(index));
             galleryGrid.appendChild(galleryItem);
         });
@@ -261,6 +281,10 @@ class DestinationDetail {
     }
 
     retryLoad() {
+        window.location.reload();
+    }
+
+    retryLoad() {
         this.init();
     }
 
@@ -272,12 +296,13 @@ class DestinationDetail {
 
     initStarRating() {
         const stars = document.querySelectorAll('#stars-input i');
-        let selectedRating = 0;
+        // Initialize selectedRating di constructor atau di sini
+        this.selectedRating = 0;
 
         stars.forEach((star, index) => {
             star.addEventListener('click', () => {
-                selectedRating = index + 1;
-                this.updateStarDisplay(selectedRating);
+                this.selectedRating = index + 1;
+                this.updateStarDisplay(this.selectedRating, true);
             });
 
             star.addEventListener('mouseover', () => {
@@ -285,12 +310,9 @@ class DestinationDetail {
             });
 
             star.addEventListener('mouseout', () => {
-                this.updateStarDisplay(selectedRating, false);
+                this.updateStarDisplay(this.selectedRating, false);
             });
         });
-
-        // Store selected rating for later use
-        this.selectedRating = selectedRating;
     }
 
     updateStarDisplay(rating, isSelected = true) {
@@ -329,65 +351,101 @@ class DestinationDetail {
         });
     }
 
-    submitReview(rating, comment) {
-        const review = {
-            id: Date.now(),
-            author: 'Pengguna Anonim', // In a real app, this would come from user authentication
-            rating: rating,
-            comment: comment,
-            date: new Date().toLocaleDateString('id-ID'),
-            destinationId: this.destinationId
-        };
+    async submitReview(rating, comment) {
+        try {
+            const response = await fetch('../api/reviews.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    destination_id: this.destinationId,
+                    user_name: 'Pengguna Anonim',
+                    rating: rating,
+                    comment: comment
+                })
+            });
 
-        // Save to localStorage (in a real app, this would be sent to a server)
-        const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-        reviews.push(review);
-        localStorage.setItem('reviews', JSON.stringify(reviews));
+            const result = await response.json();
+            console.log('Submit review response:', result);
 
-        // Clear form
-        document.getElementById('comment-input').value = '';
-        this.selectedRating = 0;
-        this.updateStarDisplay(0);
+            if (result.success) {
+                // Clear form
+                document.getElementById('comment-input').value = '';
+                this.selectedRating = 0;
+                this.updateStarDisplay(0, true);
 
-        // Reload comments
-        this.loadComments();
+                // Reload comments
+                await this.loadComments();
 
-        showNotification('Ulasan berhasil dikirim!');
+                showNotification('Ulasan berhasil dikirim!');
+            } else {
+                console.error('API Error:', result.message);
+                showNotification('Gagal: ' + (result.message || 'Silakan coba lagi.'));
+            }
+        } catch (error) {
+            console.error('Error submitting review:', error);
+            showNotification('Terjadi kesalahan. Silakan coba lagi.');
+        }
     }
 
-    loadComments() {
+    async loadReviews() {
+        await this.loadComments();
+    }
+
+    async loadComments() {
         const commentsList = document.getElementById('comments-list');
-        const reviews = JSON.parse(localStorage.getItem('reviews') || '[]');
-        const destinationReviews = reviews.filter(review => review.destinationId == this.destinationId);
+        if (!commentsList) return;
 
-        if (destinationReviews.length === 0) {
-            commentsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Belum ada ulasan. Jadilah yang pertama memberikan ulasan!</p>';
-            return;
-        }
+        try {
+            // Load reviews from API
+            const response = await fetch(`../api/reviews.php?destination_id=${this.destinationId}`);
+            const result = await response.json();
 
-        commentsList.innerHTML = '';
-        destinationReviews.forEach(review => {
-            const commentItem = document.createElement('div');
-            commentItem.className = 'comment-item';
-            commentItem.innerHTML = `
-                <div class="comment-header">
-                    <span class="comment-author">${review.author}</span>
-                    <div class="comment-rating">
-                        <div class="stars">${this.createStarRating(review.rating)}</div>
-                        <span class="rating-value">${review.rating}/5</span>
+            if (!result.success || !result.data || result.data.length === 0) {
+                commentsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Belum ada ulasan. Jadilah yang pertama memberikan ulasan!</p>';
+                return;
+            }
+
+            const reviews = result.data;
+            commentsList.innerHTML = '';
+            
+            reviews.forEach(review => {
+                const commentItem = document.createElement('div');
+                commentItem.className = 'comment-item';
+                commentItem.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author">${review.visitor_name || review.user_name}</span>
+                        <div class="comment-rating">
+                            <div class="stars">${this.createStarRating(review.rating)}</div>
+                            <span class="rating-value">${review.rating}/5</span>
+                        </div>
                     </div>
-                </div>
-                <span class="comment-date">${review.date}</span>
-                <p class="comment-text">${review.comment}</p>
-            `;
-            commentsList.appendChild(commentItem);
-        });
+                    <span class="comment-date">${new Date(review.created_at).toLocaleDateString('id-ID')}</span>
+                    <p class="comment-text">${review.comment}</p>
+                `;
+                commentsList.appendChild(commentItem);
+            });
+        } catch (error) {
+            console.error('Error loading reviews:', error);
+            commentsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Belum ada ulasan. Jadilah yang pertama memberikan ulasan!</p>';
+        }
     }
 }
 
 // Utility functions
 function goBack() {
-    window.history.back();
+    // Cek apakah ada history
+    if (window.history.length > 1 && document.referrer !== '') {
+        window.history.back();
+    } else {
+        // Jika tidak ada history, redirect ke beranda
+        window.location.href = 'index.html';  // Tetap relatif karena sama-sama di public/
+    }
+}
+
+function retryLoad() {
+    window.location.reload();
 }
 
 function shareDestination() {
@@ -485,7 +543,7 @@ document.head.appendChild(style);
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    new DestinationDetail();
+    window.destinationDetail = new DestinationDetail();
 
     // Load favorite state
     const destinationId = new URLSearchParams(window.location.search).get('id');

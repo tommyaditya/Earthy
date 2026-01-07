@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <base href="/Maps/public/">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Peta Pariwisata Interaktif - Jelajahi Indonesia</title>
     <meta name="description" content="Temukan destinasi wisata terbaik di Indonesia dengan peta interaktif kami. Cari, filter, dan simpan favorit Anda.">
-    <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" href="assets/images/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" href="../assets/images/favicon.ico" type="image/x-icon">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
@@ -26,6 +27,12 @@
                     <li><a href="#features" class="nav-link">Fitur</a></li>
                     <li><a href="#about" class="nav-link">Tentang</a></li>
                     <li><a href="map.html" class="nav-link btn-primary">Jelajahi Peta</a></li>
+                    <li id="auth-menu">
+                        <!-- Will be dynamically updated by JavaScript -->
+                        <a href="../admin/login.php" class="nav-link" id="login-link">
+                            <i class="fas fa-sign-in-alt"></i> Login
+                        </a>
+                    </li>
                 </ul>
             </div>
         </nav>
@@ -49,7 +56,7 @@
                     </div>
                 </div>
                 <div class="hero-image">
-                    <img src="assets/images/raja-ampat.jpg" alt="Peta Indonesia dengan marker destinasi wisata" loading="lazy">
+                    <img src="../assets/images/raja-ampat.jpg" alt="Peta Indonesia dengan marker destinasi wisata" loading="lazy">
                 </div>
             </div>
         </section>
@@ -120,7 +127,7 @@
                         </a>
                     </div>
                     <div class="about-image">
-                        <img src="assets/images/gunung-bromo.jpg" alt="Keindahan alam Indonesia" loading="lazy">
+                        <img src="../assets/images/gunung-bromo.jpg" alt="Keindahan alam Indonesia" loading="lazy">
                     </div>
                 </div>
             </div>
@@ -132,7 +139,7 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <i class="fas fa-map-marked-alt"></i>
-                    <span>Peta Pariwisata Interaktif</span>
+                    <span>Peta Pariwisata</span>
                 </div>
                 <div class="footer-links">
                     <a href="#home">Beranda</a>
@@ -147,11 +154,75 @@
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 Peta Pariwisata Interaktif. Dibuat dengan ❤️ untuk Indonesia.</p>
+                <p>&copy; 2024 Peta Pariwisata. Dibuat dengan ❤️ untuk Indonesia.</p>
             </div>
         </div>
     </footer>
 
-    <script src="assets/js/main.js"></script>
+    <script src="../assets/js/main.js"></script>
+    <script>
+        // Check user session and update navbar
+        async function updateNavbar() {
+            try {
+                const response = await fetch('api/session.php');
+                const data = await response.json();
+                
+                const authMenu = document.getElementById('auth-menu');
+                
+                if (data.logged_in && data.user) {
+                    // User is logged in, show user menu
+                    const userName = data.user.full_name || data.user.username;
+                    const isAdmin = data.user.role === 'admin';
+                    
+                    authMenu.innerHTML = `
+                        <div class="user-menu">
+                            <a href="#" class="nav-link user-link" id="user-dropdown-toggle">
+                                <i class="fas fa-user-circle"></i>
+                                <span>${userName}</span>
+                                <i class="fas fa-chevron-down"></i>
+                            </a>
+                            <div class="user-dropdown" id="user-dropdown">
+                                ${isAdmin ? '<a href="../admin/index.php"><i class="fas fa-tachometer-alt"></i> Dashboard</a>' : ''}
+                                <a href="../user/profile.php"><i class="fas fa-user"></i> Profile</a>
+                                <a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                            </div>
+                        </div>
+                    `;
+                    
+                    // Add dropdown toggle functionality
+                    const dropdownToggle = document.getElementById('user-dropdown-toggle');
+                    const dropdown = document.getElementById('user-dropdown');
+                    
+                    dropdownToggle.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        dropdown.classList.toggle('active');
+                    });
+                    
+                    // Close dropdown when clicking outside
+                    document.addEventListener('click', (e) => {
+                        if (!authMenu.contains(e.target)) {
+                            dropdown.classList.remove('active');
+                        }
+                    });
+                    
+                    // Logout functionality
+                    document.getElementById('logout-btn').addEventListener('click', async (e) => {
+                        e.preventDefault();
+                        try {
+                            await fetch('api/auth.php?action=logout');
+                            window.location.reload();
+                        } catch (error) {
+                            console.error('Logout failed:', error);
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Failed to check session:', error);
+            }
+        }
+        
+        // Run on page load
+        updateNavbar();
+    </script>
 </body>
 </html>

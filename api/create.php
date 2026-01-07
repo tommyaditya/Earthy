@@ -32,12 +32,12 @@ try {
     // Insert destination
     $query = "INSERT INTO destinations 
               (name, description, long_description, address, location, latitude, longitude, 
-               category, rating, opening_hours, ticket_price, contact, website, facilities, 
-               accessibility, featured) 
+               category, rating, opening_hours, ticket_price, facilities, 
+               accessibility, featured, images) 
               VALUES 
               (:name, :description, :long_description, :address, :location, :latitude, :longitude,
-               :category, :rating, :opening_hours, :ticket_price, :contact, :website, :facilities,
-               :accessibility, :featured)";
+               :category, :rating, :opening_hours, :ticket_price, :facilities,
+               :accessibility, :featured, :images)";
     
     $stmt = $db->prepare($query);
     
@@ -60,12 +60,6 @@ try {
     $ticket_price = isset($data->ticket_price) ? $data->ticket_price : null;
     $stmt->bindParam(':ticket_price', $ticket_price);
     
-    $contact = isset($data->contact) ? $data->contact : null;
-    $stmt->bindParam(':contact', $contact);
-    
-    $website = isset($data->website) ? $data->website : null;
-    $stmt->bindParam(':website', $website);
-    
     $facilities = isset($data->facilities) ? json_encode($data->facilities) : null;
     $stmt->bindParam(':facilities', $facilities);
     
@@ -74,6 +68,9 @@ try {
     
     $featured = isset($data->featured) ? $data->featured : 0;
     $stmt->bindParam(':featured', $featured);
+    
+    $images = isset($data->images) ? json_encode($data->images) : null;
+    $stmt->bindParam(':images', $images);
     
     $stmt->execute();
     

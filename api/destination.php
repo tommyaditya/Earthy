@@ -43,15 +43,8 @@ try {
         exit;
     }
     
-    // Get images
-    $imageQuery = "SELECT image_url, caption, is_primary, display_order 
-                   FROM destination_images 
-                   WHERE destination_id = :id 
-                   ORDER BY display_order";
-    $imageStmt = $db->prepare($imageQuery);
-    $imageStmt->bindParam(':id', $_GET['id'], PDO::PARAM_INT);
-    $imageStmt->execute();
-    $destination['images'] = $imageStmt->fetchAll();
+    // Parse images JSON to array
+    $destination['images'] = $destination['images'] ? json_decode($destination['images']) : [];
     
     // Get reviews
     $reviewQuery = "SELECT id, user_name, rating, comment, created_at 
