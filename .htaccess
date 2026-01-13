@@ -1,12 +1,16 @@
 # Set default page untuk direktori
-DirectoryIndex public/index.html index.html index.php
+DirectoryIndex index.html index.php
 
 # Enable URL Rewriting
 RewriteEngine On
 
-# Redirect dari Maps/ langsung ke Maps/public/index.html
-RewriteCond %{REQUEST_URI} ^/Maps/?$
-RewriteRule ^/?$ /Maps/public/index.html [L]
+# Exclude API directory and HTML files from rewriting
+RewriteCond %{REQUEST_URI} !^/api/
+RewriteCond %{REQUEST_URI} !\.html$
+
+# Redirect dari root ke index.html
+RewriteCond %{REQUEST_URI} ^/?$
+RewriteRule ^/?$ index.html [L]
 
 # Error pages
-ErrorDocument 404 /Maps/public/index.html
+ErrorDocument 404 index.html

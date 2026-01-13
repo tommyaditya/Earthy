@@ -13,7 +13,7 @@ header('Content-Type: application/json; charset=UTF-8');
 header('Access-Control-Allow-Methods: GET, POST');
 header('Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With');
 
-require_once '../config/database.php';
+require_once __DIR__ . '/../config/database.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
 
@@ -36,8 +36,8 @@ try {
         $stmt = $db->prepare($query);
         $stmt->bindParam(':username', $data->username);
         $stmt->execute();
-        
-        $user = $stmt->fetch();
+
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
         
         if (!$user) {
             http_response_code(401);
@@ -58,14 +58,14 @@ try {
             exit;
         }
         
-        // Set session based on role
+        // Set session based on role and ensure profile_picture has a default
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
         $_SESSION['email'] = $user['email'];
         $_SESSION['full_name'] = $user['full_name'];
         $_SESSION['role'] = $user['role'];
         $_SESSION['logged_in'] = true;
-        $_SESSION['profile_picture'] = $user['profile_picture'];
+        $_SESSION['profile_picture'] = !empty($user['profile_picture']) ? $user['profile_picture'] : 'assets/images/default-profile.png';
         
         // For backward compatibility with existing admin pages
         if ($user['role'] === 'admin') {
@@ -78,7 +78,7 @@ try {
         }
         
         // Determine redirect URL based on role (relative to login page location)
-        $redirectUrl = $user['role'] === 'admin' ? 'index.php' : '../public/index.html';
+        $redirectUrl = $user['role'] === 'admin' ? 'index.php' : '../index.html';
         
         http_response_code(200);
         echo json_encode([
@@ -90,7 +90,8 @@ try {
                 'username' => $user['username'],
                 'email' => $user['email'],
                 'name' => $user['full_name'],
-                'role' => $user['role']
+                'role' => $user['role'],
+                'profile_picture' => $_SESSION['profile_picture']
             ]
         ]);
         
@@ -109,18 +110,34 @@ try {
             
         } elseif ($action === 'check') {
             // Check session
-            if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
-                http_response_code(200);
-                echo json_encode([
-                    'success' => true,
-                    'logged_in' => true,
-                    'data' => [
+            if ((isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) ||
+                (isset($_SESSION['logged_in']) && $_SESSION['logged_in'])) {
+
+                // Determine which session data to use
+                $sessionData = [];
+                if (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) {
+                    $sessionData = [
                         'id' => $_SESSION['admin_id'],
                         'username' => $_SESSION['admin_username'],
                         'email' => $_SESSION['admin_email'],
                         'name' => $_SESSION['admin_name'],
                         'role' => $_SESSION['admin_role']
-                    ]
+                    ];
+                } elseif (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
+                    $sessionData = [
+                        'id' => $_SESSION['user_id'],
+                        'username' => $_SESSION['username'],
+                        'email' => $_SESSION['email'],
+                        'name' => $_SESSION['full_name'],
+                        'role' => $_SESSION['role']
+                    ];
+                }
+
+                http_response_code(200);
+                echo json_encode([
+                    'success' => true,
+                    'logged_in' => true,
+                    'data' => $sessionData
                 ]);
             } else {
                 http_response_code(401);

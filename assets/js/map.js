@@ -123,47 +123,47 @@ class TourismMap {
         });
     }
 
-    async loadDestinations() {
+    async loadDestinations(forceRefetch = false) {
+        // Only fetch from API if data not cached or force refetch
+        if (!this.tourismData || this.tourismData.length === 0 || forceRefetch) {
+            try {
+                // Load data from API
+                const response = await fetch('api/destinations.php');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const result = await response.json();
+
+                // Convert API response to destination format
+                this.tourismData = result.data.map(dest => ({
+                    id: dest.id,
+                    name: dest.name,
+                    category: dest.category,
+                    location: dest.location,
+                    coords: [parseFloat(dest.latitude), parseFloat(dest.longitude)],
+                    rating: dest.rating || 0,
+                    description: dest.description,
+                    hours: dest.opening_hours || '-',
+                    price: dest.ticket_price || '-',
+                    images: dest.primary_image ? [dest.primary_image] : []
+                }));
+            } catch (error) {
+                window.showToast('Gagal memuat data destinasi. Silakan refresh halaman.', 'error');
+                this.tourismData = [];
+            }
+        }
+
+        // Clear existing markers
         this.clearMarkers();
 
-        try {
-            // Load data from API
-            const response = await fetch('../api/destinations.php');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            const result = await response.json();
+        const filteredData = this.getFilteredData();
 
-            // Convert API response to destination format
-            this.tourismData = result.data.map(dest => ({
-                id: dest.id,
-                name: dest.name,
-                category: dest.category,
-                location: dest.location,
-                coords: [parseFloat(dest.latitude), parseFloat(dest.longitude)],
-                rating: dest.rating || 0,
-                description: dest.description,
-                hours: dest.opening_hours || '-',
-                price: dest.ticket_price || '-',
-                images: dest.primary_image ? [dest.primary_image] : []
-            }));
+        filteredData.forEach(destination => {
+            this.addMarker(destination);
+        });
 
-            const filteredData = this.getFilteredData();
-
-            filteredData.forEach(destination => {
-                this.addMarker(destination);
-            });
-
-            this.updateResultsList(filteredData);
-            this.updateResultsCount(filteredData.length);
-        } catch (error) {
-            console.error('Error loading GeoJSON data:', error);
-            window.showToast('Gagal memuat data destinasi. Silakan refresh halaman.', 'error');
-            // Fallback to empty data
-            this.tourismData = [];
-            this.updateResultsList([]);
-            this.updateResultsCount(0);
-        }
+        this.updateResultsList(filteredData);
+        this.updateResultsCount(filteredData.length);
     }
 
     async addMarker(destination) {
@@ -203,9 +203,12 @@ class TourismMap {
             console.warn('Could not load weather for popup:', error);
         }
 
+        // Resolve image path (use helper to support http links, relative paths, and filenames)
+        const imgSrc = this.resolveImagePath(Array.isArray(destination.images) && destination.images.length ? destination.images[0] : null);
+
         return `
             <div class="popup-content">
-                <img src="${destination.images[0]}" alt="${destination.name}" class="popup-image">
+                <img src="${imgSrc}" alt="${destination.name}" class="popup-image">
                 <h3>${destination.name}</h3>
                 <p class="popup-location">${destination.location}</p>
                 <p class="popup-description">${destination.description}</p>
@@ -279,7 +282,8 @@ class TourismMap {
     }
 
     filterDestinations() {
-        this.loadDestinations();
+        // Use cached data, don't refetch from API
+        this.loadDestinations(false);
     }
 
     getFilteredData() {
@@ -367,8 +371,11 @@ class TourismMap {
             item.classList.add('favorite');
         }
 
+        // Resolve image path with fallback
+        const imgSrc = this.resolveImagePath(destination.images && destination.images.length ? destination.images[0] : null);
+
         item.innerHTML = `
-            <img src="${destination.images[0]}" alt="${destination.name}" class="result-image">
+            <img src="${imgSrc}" alt="${destination.name}" class="result-image" onerror="this.onerror=null;this.src='assets/images/placeholder.jpg';">
             <div class="result-info">
                 <h4><a href="detail.html?id=${destination.id}">${destination.name}</a></h4>
                 <p>${window.truncateText(destination.description, 100)}</p>
@@ -384,9 +391,7 @@ class TourismMap {
             </div>
         `;
 
-        item.addEventListener('click', () => {
-            this.showQuickView(destination);
-        });
+        // Single click event listener (removed duplicate)
         item.addEventListener('click', () => {
             this.showQuickView(destination);
         });
@@ -525,15 +530,15 @@ class TourismMap {
         mainImage.src = destination.images[0];
         mainImage.alt = destination.name;
         rating.textContent = destination.rating;
-        
+
         category.textContent = destination.category.charAt(0).toUpperCase() + destination.category.slice(1);
         category.style.backgroundColor = window.getCategoryColor(destination.category);
-        
+
         location.textContent = destination.location;
         description.textContent = destination.description;
         hours.textContent = destination.hours || 'Tidak tersedia';
         price.textContent = destination.price || 'Gratis';
-        
+
         if (destination.contact) {
             contact.textContent = destination.contact;
             contactContainer.style.display = 'flex';
@@ -559,7 +564,7 @@ class TourismMap {
 
         // Set button actions
         detailBtn.href = `detail.html?id=${destination.id}`;
-        
+
         const isFavorite = this.favorites.includes(destination.id);
         favoriteBtn.classList.toggle('active', isFavorite);
         favoriteBtn.onclick = () => {
@@ -584,7 +589,7 @@ class TourismMap {
         if (navigator.share) {
             navigator.share(shareData)
                 .then(() => window.showToast('Berhasil dibagikan', 'success'))
-                .catch(() => {});
+                .catch(() => { });
         } else {
             // Fallback: copy to clipboard
             navigator.clipboard.writeText(shareData.url)
@@ -817,6 +822,17 @@ class TourismMap {
             iconAnchor: [15, 30],
             popupAnchor: [0, -30]
         });
+    }
+
+    // helper to resolve image path for popup and lists
+    resolveImagePath(imageName) {
+        if (!imageName) return 'assets/images/placeholder.jpg';
+        const s = String(imageName).trim();
+        if (/^https?:\/\//i.test(s)) return `api/image-proxy.php?url=${encodeURIComponent(s)}`;
+        // If already a relative path (contains a slash) or assets/, use as-is
+        if (s.startsWith('assets/') || s.indexOf('/') !== -1) return s;
+        // Otherwise assume filename and prepend uploads folder
+        return 'uploads/destinations/' + s;
     }
 
     debounce(func, wait) {

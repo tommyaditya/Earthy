@@ -477,24 +477,47 @@ $admin_email = $_SESSION['admin_email'] ?? '';
             // Collect image data
             const imageUrls = [];
             const imageCaptions = [];
-            
+            let primaryImageIndex = 0;
+
             // Get existing images
-            document.querySelectorAll('input[name="existing_images[]"]').forEach(input => {
-                if (input.value) imageUrls.push(input.value);
+            document.querySelectorAll('input[name="existing_images[]"]').forEach((input, index) => {
+                if (input.value) {
+                    imageUrls.push(input.value);
+                    // Check if this is marked as primary
+                    const container = input.closest('.image-item');
+                    const primaryCheckbox = container.querySelector(`input[name="is_primary_${container.dataset.id}"]`);
+                    if (primaryCheckbox && primaryCheckbox.checked) {
+                        primaryImageIndex = imageUrls.length - 1;
+                    }
+                }
             });
-            
+
             // Get new image URLs
-            document.querySelectorAll('input[name="image_urls[]"]').forEach(input => {
-                if (input.value) imageUrls.push(input.value);
+            document.querySelectorAll('input[name="image_urls[]"]').forEach((input, index) => {
+                if (input.value) {
+                    imageUrls.push(input.value);
+                    // Check if this is marked as primary
+                    const container = input.closest('.image-item');
+                    const primaryCheckbox = container.querySelector(`input[name="is_primary_${container.dataset.id}"]`);
+                    if (primaryCheckbox && primaryCheckbox.checked) {
+                        primaryImageIndex = imageUrls.length - 1;
+                    }
+                }
             });
-            
+
             // Get captions
             document.querySelectorAll('input[name="image_captions[]"]').forEach(input => {
                 imageCaptions.push(input.value || '');
             });
-            
+
             if (imageUrls.length > 0) {
                 formData.images = imageUrls;
+                // Reorder images so primary image is first
+                if (primaryImageIndex > 0) {
+                    const primaryImage = imageUrls.splice(primaryImageIndex, 1)[0];
+                    imageUrls.unshift(primaryImage);
+                    formData.images = imageUrls;
+                }
             }
 
             console.log('Form Data:', formData);

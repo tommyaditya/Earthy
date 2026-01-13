@@ -23,30 +23,39 @@ class DestinationDetail {
         try {
             this.showLoading();
 
-            console.log('Loading destination ID:', this.destinationId);
-            const apiUrl = `../api/destination.php?id=${this.destinationId}`;
-            console.log('Fetching from:', apiUrl);
-            
+            const apiUrl = `./api/destination.php?id=${this.destinationId}`;
+
             const response = await fetch(apiUrl);
-            console.log('Response status:', response.status);
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
 
+            const contentType = response.headers.get('content-type') || '';
+            if (!contentType.includes('application/json')) {
+                const text = await response.text();
+                throw new Error('Non-JSON response from server: ' + (text ? text.slice(0, 1000) : '[empty]'));
+            }
+
             const result = await response.json();
-            console.log('API result:', result);
 
             if (!result.success || !result.data) {
                 throw new Error('Destination not found');
             }
 
-            this.destinationData = result.data;
-            this.renderDestinationDetail();
+            // API returns: { success, data: { destination, images, primary_image } }
+            // Merge destination fields with images and primary_image
+            const dest = result.data.destination || result.data;
+            this.destinationData = {
+                ...dest,
+                images: result.data.images || [],
+                primary_image: result.data.primary_image || null
+            };
+
+            this.renderDestinationDetail(this.destinationData);
             this.loadReviews();
 
         } catch (error) {
-            console.error('Error loading destination data:', error);
             this.showError();
         }
     }
@@ -63,178 +72,135 @@ class DestinationDetail {
         document.getElementById('detail-content').classList.add('hidden');
     }
 
-    renderDestinationDetail() {
+    showContent() {
         document.getElementById('loading').classList.add('hidden');
         document.getElementById('error').classList.add('hidden');
         document.getElementById('detail-content').classList.remove('hidden');
-
-        // Set main image
-        const mainImage = document.getElementById('main-image');
-        if (this.destinationData.primary_image) {
-            mainImage.src = 'uploads/destinations/' + this.destinationData.primary_image;
-        } else {
-            mainImage.src = 'assets/images/placeholder.jpg';
-        }
-        mainImage.alt = this.destinationData.name;
-
-        // Set hero content
-        document.getElementById('hero-title').textContent = this.destinationData.name;
-        document.getElementById('hero-category').innerHTML = `
-            <i class="fas fa-tag"></i>
-            <span>${this.destinationData.category}</span>
-        `;
-
-        // Set location, hours, price
-        document.getElementById('location-text').textContent = this.destinationData.location;
-        document.getElementById('hours-text').textContent = this.destinationData.opening_hours || '-';
-        document.getElementById('price-text').textContent = this.destinationData.ticket_price || 'Gratis';
-
-        // Set description
-        document.getElementById('description-text').textContent = this.destinationData.long_description || this.destinationData.description;
-
-        // Set rating
-        this.renderRating();
-
-        // Render gallery
-        this.renderGallery();
-
-        // Render tags
-        this.renderTags();
-
-        // Initialize rating and comments
-        this.initRatingComments();
     }
 
-    renderGallery() {
-        const galleryGrid = document.getElementById('gallery-grid');
-        if (!galleryGrid) return;
-        
-        galleryGrid.innerHTML = '';
+    // helper to resolve image path
+    resolveImagePath(imageName) {
+        if (!imageName) return 'assets/images/placeholder.jpg';
+        const trimmed = String(imageName).trim();
+        if (/^https?:\/\//i.test(trimmed)) return `api/image-proxy.php?url=${encodeURIComponent(trimmed)}`;
+        // treat as relative/path or filename -> prepend uploads folder for simple filenames
+        if (trimmed.startsWith('assets/') || trimmed.indexOf('/') !== -1) return trimmed;
+        return 'uploads/destinations/' + trimmed;
+    }
 
-        // Get images from API response
-        const images = this.destinationData.images || [];
-        
-        if (images.length === 0) {
-            galleryGrid.innerHTML = '<p>Tidak ada galeri foto tersedia</p>';
+    renderDestinationDetail(dest = this.destinationData) {
+        if (!dest) {
+            this.showError();
             return;
         }
 
-        images.forEach((imageObj, index) => {
-            // Handle both string URLs and object with image_url property
-            const imagePath = typeof imageObj === 'string' ? imageObj : imageObj.image_url;
-            const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
-            // Use imagePath directly - it's already a full URL or relative path
-            galleryItem.innerHTML = `<img src="${imagePath}" alt="Gallery image ${index + 1}">`;
-            galleryItem.addEventListener('click', () => this.openImageModal(index));
-            galleryGrid.appendChild(galleryItem);
-        });
-    }
+        const mainImage = document.getElementById('main-image');
+        const gallery = document.getElementById('image-gallery') || document.getElementById('gallery-grid');
 
-    openImageModal(index) {
-        // Create modal for full-size image view
-        const modal = document.createElement('div');
-        modal.className = 'image-modal';
-        modal.innerHTML = `
-            <div class="modal-backdrop" onclick="this.parentElement.remove()"></div>
-            <div class="modal-content">
-                <button class="modal-close" onclick="this.parentElement.parentElement.remove()">
-                    <i class="fas fa-times"></i>
-                </button>
-                <img src="${this.destinationData.images[index]}" alt="Full size image">
-                <div class="modal-navigation">
-                    ${index > 0 ? `<button class="nav-btn prev-btn" onclick="changeImage(${index - 1})"><i class="fas fa-chevron-left"></i></button>` : ''}
-                    ${index < this.destinationData.images.length - 1 ? `<button class="nav-btn next-btn" onclick="changeImage(${index + 1})"><i class="fas fa-chevron-right"></i></button>` : ''}
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
+        // Handle images
+        try {
+            const primary = dest.primary_image || (Array.isArray(dest.images) && dest.images.length ? dest.images[0] : null);
+            const mainSrc = this.resolveImagePath(primary);
 
-        // Add modal styles
-        const style = document.createElement('style');
-        style.textContent = `
-            .image-modal {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                z-index: 1000;
-                display: flex;
-                align-items: center;
-                justify-content: center;
+            if (mainImage) {
+                mainImage.src = mainSrc;
+                mainImage.onerror = function () {
+                    this.onerror = null;
+                    this.src = 'assets/images/placeholder.jpg';
+                };
             }
-            .modal-backdrop {
-                position: absolute;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0, 0, 0, 0.8);
+
+            const heroEl = document.getElementById('hero');
+            if (heroEl) {
+                heroEl.style.backgroundImage = `url(${this.resolveImagePath(primary)})`;
             }
-            .modal-content {
-                position: relative;
-                max-width: 90vw;
-                max-height: 90vh;
-                z-index: 1001;
+
+            if (gallery) {
+                gallery.innerHTML = '';
+                const imgs = Array.isArray(dest.images) && dest.images.length > 0 ? dest.images : [];
+                if (imgs.length === 0) {
+                    // Show placeholder if no images
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'gallery-item';
+                    const el = document.createElement('img');
+                    el.src = 'assets/images/placeholder.jpg';
+                    el.alt = 'No image available';
+                    wrapper.appendChild(el);
+                    gallery.appendChild(wrapper);
+                } else {
+                    imgs.forEach((img) => {
+                        const resolved = this.resolveImagePath(img);
+                        const wrapper = document.createElement('div');
+                        wrapper.className = 'gallery-item';
+                        const el = document.createElement('img');
+                        el.src = resolved;
+                        el.alt = dest.name || 'destination image';
+                        el.onerror = function () { this.src = 'assets/images/placeholder.jpg'; };
+                        wrapper.appendChild(el);
+                        gallery.appendChild(wrapper);
+                    });
+                }
             }
-            .modal-content img {
-                max-width: 100%;
-                max-height: 100%;
-                object-fit: contain;
+        } catch (imgErr) {
+            if (mainImage) mainImage.src = 'assets/images/placeholder.jpg';
+            if (gallery) gallery.innerHTML = '<img src="assets/images/placeholder.jpg" class="thumb" alt="placeholder">';
+        }
+
+        // Set hero content
+        try {
+            const heroTitle = document.getElementById('hero-title');
+            const heroCategory = document.getElementById('hero-category');
+            if (heroTitle) heroTitle.textContent = dest.name || 'Destinasi';
+            if (heroCategory) {
+                heroCategory.innerHTML = `
+                    <i class="fas fa-tag"></i>
+                    <span>${dest.category || 'Umum'}</span>
+                `;
             }
-            .modal-close {
-                position: absolute;
-                top: -50px;
-                right: 0;
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            .modal-navigation {
-                position: absolute;
-                top: 50%;
-                left: 0;
-                right: 0;
-                transform: translateY(-50%);
-                display: flex;
-                justify-content: space-between;
-                padding: 0 20px;
-            }
-            .nav-btn {
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                width: 50px;
-                height: 50px;
-                border-radius: 50%;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: background 0.3s ease;
-            }
-            .nav-btn:hover {
-                background: rgba(255, 255, 255, 0.3);
-            }
-        `;
-        document.head.appendChild(style);
+        } catch (e) { }
+
+        // Set location, hours, price
+        try {
+            const locationText = document.getElementById('location-text');
+            const hoursText = document.getElementById('hours-text');
+            const priceText = document.getElementById('price-text');
+            if (locationText) locationText.textContent = dest.location || '-';
+            if (hoursText) hoursText.textContent = dest.opening_hours || '-';
+            if (priceText) priceText.textContent = dest.ticket_price || 'Gratis';
+        } catch (e) { }
+
+        // Set description
+        try {
+            const descText = document.getElementById('description-text');
+            if (descText) descText.textContent = dest.long_description || dest.description || 'Tidak ada deskripsi.';
+        } catch (e) { }
+
+        // Set rating
+        try {
+            this.renderRating();
+        } catch (e) { }
+
+        // Render tags
+        try {
+            this.renderTags();
+        } catch (e) { }
+
+        // Initialize rating and comments
+        try {
+            this.initRatingComments();
+        } catch (e) { }
+
+        // ALWAYS show content (hide loading)
+        this.showContent();
     }
 
     renderRating() {
-        const rating = this.destinationData.rating;
+        const rating = this.destinationData?.rating || 0;
         const starsContainer = document.getElementById('rating-stars');
         const ratingText = document.getElementById('rating-text');
 
-        starsContainer.innerHTML = this.createStarRating(rating);
-        ratingText.textContent = `${rating}/5`;
+        if (starsContainer) starsContainer.innerHTML = this.createStarRating(rating);
+        if (ratingText) ratingText.textContent = `${rating}/5`;
     }
 
     createStarRating(rating) {
@@ -278,10 +244,6 @@ class DestinationDetail {
         } else {
             tagsSection.style.display = 'none';
         }
-    }
-
-    retryLoad() {
-        window.location.reload();
     }
 
     retryLoad() {
@@ -353,7 +315,7 @@ class DestinationDetail {
 
     async submitReview(rating, comment) {
         try {
-            const response = await fetch('../api/reviews.php', {
+            const response = await fetch('./api/reviews.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -367,7 +329,6 @@ class DestinationDetail {
             });
 
             const result = await response.json();
-            console.log('Submit review response:', result);
 
             if (result.success) {
                 // Clear form
@@ -380,11 +341,9 @@ class DestinationDetail {
 
                 showNotification('Ulasan berhasil dikirim!');
             } else {
-                console.error('API Error:', result.message);
                 showNotification('Gagal: ' + (result.message || 'Silakan coba lagi.'));
             }
         } catch (error) {
-            console.error('Error submitting review:', error);
             showNotification('Terjadi kesalahan. Silakan coba lagi.');
         }
     }
@@ -399,7 +358,7 @@ class DestinationDetail {
 
         try {
             // Load reviews from API
-            const response = await fetch(`../api/reviews.php?destination_id=${this.destinationId}`);
+            const response = await fetch(`./api/reviews.php?destination_id=${this.destinationId}`);
             const result = await response.json();
 
             if (!result.success || !result.data || result.data.length === 0) {
@@ -409,7 +368,7 @@ class DestinationDetail {
 
             const reviews = result.data;
             commentsList.innerHTML = '';
-            
+
             reviews.forEach(review => {
                 const commentItem = document.createElement('div');
                 commentItem.className = 'comment-item';
@@ -427,7 +386,6 @@ class DestinationDetail {
                 commentsList.appendChild(commentItem);
             });
         } catch (error) {
-            console.error('Error loading reviews:', error);
             commentsList.innerHTML = '<p style="text-align: center; color: #666; padding: 20px;">Belum ada ulasan. Jadilah yang pertama memberikan ulasan!</p>';
         }
     }

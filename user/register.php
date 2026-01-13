@@ -6,7 +6,7 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
     if (isset($_SESSION['role']) && $_SESSION['role'] === 'admin') {
         header('Location: ../admin/index.php');
     } else {
-        header('Location: ../public/index.html');
+        header('Location: ../index.html');
     }
     exit;
 }
@@ -604,23 +604,36 @@ if (isset($_SESSION['logged_in']) && $_SESSION['logged_in']) {
                         full_name: fullName 
                     })
                 });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showAlert('Registrasi berhasil! Mengalihkan ke halaman login...', 'success');
-                    setTimeout(() => {
-                        window.location.href = '../admin/login.php';
-                    }, 2000);
-                } else {
+
+                const contentType = response.headers.get('content-type') || '';
+
+                if (contentType.includes('application/json')) {
+                    const result = await response.json();
+
+                    if (response.ok && result.success) {
+                        showAlert('Registrasi berhasil! Mengalihkan ke halaman login...', 'success');
+                        setTimeout(() => {
+                            window.location.href = '../admin/login.php';
+                        }, 1500);
+                        return;
+                    }
+
                     showAlert(result.message || 'Registrasi gagal', 'error');
                     registerBtn.disabled = false;
                     registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Daftar';
+                } else {
+                    // Non-JSON response (e.g. PHP error) — show readable preview
+                    const text = await response.text();
+                    const preview = text.length > 800 ? text.slice(0, 800) + '...' : text;
+                    showAlert('Server mengembalikan respons tidak terduga. Silakan hubungi administrator.\n\nPreview respons:\n' + preview, 'error');
+                    console.error('Non-JSON response from ../api/register.php:', text);
+                    registerBtn.disabled = false;
+                    registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Daftar';
                 }
-                
+
             } catch (error) {
-                console.error('Error:', error);
-                showAlert('Terjadi kesalahan. Silakan coba lagi.', 'error');
+                console.error('Network or parsing error:', error);
+                showAlert('Gagal terhubung ke server. Periksa koneksi Anda dan coba lagi.', 'error');
                 registerBtn.disabled = false;
                 registerBtn.innerHTML = '<i class="fas fa-user-plus"></i> Daftar';
             }

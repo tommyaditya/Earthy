@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS users (
     email VARCHAR(100) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     full_name VARCHAR(100),
+    profile_picture VARCHAR(255) NULL,
     role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
     is_active TINYINT(1) DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -50,6 +51,7 @@ CREATE TABLE IF NOT EXISTS destinations (
     website VARCHAR(255),
     facilities JSON,
     accessibility JSON,
+    images JSON,
     featured TINYINT(1) DEFAULT 0,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -159,12 +161,12 @@ INSERT INTO tags (name, slug, description, icon, color) VALUES
 ('Belanja', 'belanja', 'Tempat belanja', 'fa-shopping-bag', '#ec4899');
 
 -- Insert Sample Destinations
-INSERT INTO destinations (name, description, long_description, address, location, latitude, longitude, category, rating, opening_hours, ticket_price, facilities, accessibility) VALUES
-('Pantai Kuta Bali', 'Pantai terkenal dengan sunset yang indah', 'Pantai Kuta adalah salah satu pantai paling terkenal di Bali dengan pasir putih yang lembut dan ombak yang cocok untuk berselancar. Pantai ini menawarkan pemandangan matahari terbenam yang spektakuler.', 'Jl. Pantai Kuta, Kuta, Badung', 'Kuta, Bali', -8.718521, 115.168671, 'alam', 4.5, '24 Jam', 'Gratis', '["Parkir", "Toilet", "Restoran", "Penyewaan Surfboard"]', '["Wheelchair Accessible", "Parking"]'),
-('Borobudur Temple', 'Candi Buddha terbesar di dunia', 'Candi Borobudur adalah candi Buddha terbesar di dunia yang dibangun pada abad ke-9. Situs warisan dunia UNESCO ini memiliki arsitektur yang menakjubkan dengan lebih dari 2.000 relief dan 504 stupa.', 'Jl. Badrawati, Borobudur, Magelang', 'Magelang, Jawa Tengah', -7.607874, 110.203751, 'budaya', 4.8, '06:00 - 17:00', 'Rp 50.000', '["Parkir", "Toilet", "Mushola", "Souvenir Shop", "Guide"]', '["Limited Wheelchair Access", "Parking"]'),
-('Raja Ampat', 'Surga bawah laut Indonesia', 'Raja Ampat adalah destinasi diving terbaik di dunia dengan keanekaragaman hayati laut yang luar biasa. Terdiri dari 1.500 pulau kecil dengan pemandangan yang sangat indah.', 'Kepulauan Raja Ampat', 'Papua Barat', -0.239730, 130.518343, 'alam', 5.0, '24 Jam', 'Bervariasi', '["Diving Center", "Homestay", "Boat Rental"]', '["Boat Access Only"]'),
-('Malioboro Yogyakarta', 'Pusat belanja dan kuliner Jogja', 'Jalan Malioboro adalah jantung kota Yogyakarta yang menawarkan berbagai oleh-oleh khas, batik, kuliner tradisional, dan atmosfer kota yang unik. Tempat yang wajib dikunjungi saat ke Yogyakarta.', 'Jl. Malioboro', 'Yogyakarta', -7.792931, 110.365165, 'kuliner', 4.3, '24 Jam', 'Gratis', '["Parkir", "ATM", "Toilet", "Restoran"]', '["Wheelchair Accessible", "Parking"]'),
-('Taman Mini Indonesia Indah', 'Miniatur kebudayaan Indonesia', 'TMII menampilkan miniatur rumah adat dari 34 provinsi di Indonesia, museum, anjungan daerah, dan berbagai wahana rekreasi yang edukatif untuk keluarga.', 'Jl. Raya TMII, Jakarta Timur', 'Jakarta', -6.302414, 106.895221, 'budaya', 4.2, '07:00 - 22:00', 'Rp 25.000', '["Parkir", "Toilet", "Restoran", "Mushola", "Cable Car"]', '["Wheelchair Accessible", "Parking", "Disabled Toilet"]');
+INSERT INTO destinations (name, description, long_description, address, location, latitude, longitude, category, rating, opening_hours, ticket_price, facilities, accessibility, images) VALUES
+('Pantai Kuta Bali', 'Pantai terkenal dengan sunset yang indah', 'Pantai Kuta adalah salah satu pantai paling terkenal di Bali dengan pasir putih yang lembut dan ombak yang cocok untuk berselancar. Pantai ini menawarkan pemandangan matahari terbenam yang spektakuler.', 'Jl. Pantai Kuta, Kuta, Badung', 'Kuta, Bali', -8.718521, 115.168671, 'alam', 4.5, '24 Jam', 'Gratis', '"[""Parkir"", ""Toilet"", ""Restoran"", ""Penyewaan Surfboard""]"', '"[""Wheelchair Accessible"", ""Parking""]"', '"[""assets/images/kuta-beach-1.jpg"", ""assets/images/kuta-beach-2.jpg""]"'),
+('Borobudur Temple', 'Candi Buddha terbesar di dunia', 'Candi Borobudur adalah candi Buddha terbesar di dunia yang dibangun pada abad ke-9. Situs warisan dunia UNESCO ini memiliki arsitektur yang menakjubkan dengan lebih dari 2.000 relief dan 504 stupa.', 'Jl. Badrawati, Borobudur, Magelang', 'Magelang, Jawa Tengah', -7.607874, 110.203751, 'budaya', 4.8, '06:00 - 17:00', 'Rp 50.000', '"[""Parkir"", ""Toilet"", ""Mushola"", ""Souvenir Shop"", ""Guide""]"', '"[""Limited Wheelchair Access"", ""Parking""]"', '"[""assets/images/borobudur-1.jpg"", ""assets/images/borobudur-2.jpg""]"'),
+('Raja Ampat', 'Surga bawah laut Indonesia', 'Raja Ampat adalah destinasi diving terbaik di dunia dengan keanekaragaman hayati laut yang luar biasa. Terdiri dari 1.500 pulau kecil dengan pemandangan yang sangat indah.', 'Kepulauan Raja Ampat', 'Papua Barat', -0.239730, 130.518343, 'alam', 5.0, '24 Jam', 'Bervariasi', '"[""Diving Center"", ""Homestay"", ""Boat Rental""]"', '"[""Boat Access Only""]"', '"[""assets/images/raja-ampat-1.jpg"", ""assets/images/raja-ampat-2.jpg""]"'),
+('Malioboro Yogyakarta', 'Pusat belanja dan kuliner Jogja', 'Jalan Malioboro adalah jantung kota Yogyakarta yang menawarkan berbagai oleh-oleh khas, batik, kuliner tradisional, dan atmosfer kota yang unik. Tempat yang wajib dikunjungi saat ke Yogyakarta.', 'Jl. Malioboro', 'Yogyakarta', -7.792931, 110.365165, 'kuliner', 4.3, '24 Jam', 'Gratis', '"[""Parkir"", ""ATM"", ""Toilet"", ""Restoran""]"', '"[""Wheelchair Accessible"", ""Parking""]"', '"[""assets/images/malioboro-1.jpg""]"'),
+('Taman Mini Indonesia Indah', 'Miniatur kebudayaan Indonesia', 'TMII menampilkan miniatur rumah adat dari 34 provinsi di Indonesia, museum, anjungan daerah, dan berbagai wahana rekreasi yang edukatif untuk keluarga.', 'Jl. Raya TMII, Jakarta Timur', 'Jakarta', -6.302414, 106.895221, 'budaya', 4.2, '07:00 - 22:00', 'Rp 25.000', '"[""Parkir"", ""Toilet"", ""Restoran"", ""Mushola"", ""Cable Car""]"', '"[""Wheelchair Accessible"", ""Parking"", ""Disabled Toilet""]"', '"[""assets/images/tmii-1.jpg""]"');
 
 -- Insert Sample Images
 INSERT INTO destination_images (destination_id, image_url, caption, is_primary, display_order) VALUES
