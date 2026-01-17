@@ -10,7 +10,9 @@ class TourismMap {
             rating: null,
             searchQuery: ''
         };
-        this.favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+        this.favorites = (JSON.parse(localStorage.getItem('favorites') || '[]'))
+            .map(id => parseInt(id))
+            .filter(id => !isNaN(id));
         this.userLocation = null;
         this.weatherCache = JSON.parse(localStorage.getItem('weatherCache') || '{}');
         this.cacheExpiry = 10 * 60 * 1000; // 10 minutes in milliseconds
@@ -145,7 +147,7 @@ class TourismMap {
                     description: dest.description,
                     hours: dest.opening_hours || '-',
                     price: dest.ticket_price || '-',
-                    images: dest.primary_image ? [dest.primary_image] : []
+                    images: dest.images || []
                 }));
             } catch (error) {
                 window.showToast('Gagal memuat data destinasi. Silakan refresh halaman.', 'error');
@@ -208,7 +210,7 @@ class TourismMap {
 
         return `
             <div class="popup-content">
-                <img src="${imgSrc}" alt="${destination.name}" class="popup-image">
+                <img src="${imgSrc}" alt="${destination.name}" class="popup-image" onerror="this.onerror=null;this.src='assets/images/placeholder.jpg';">
                 <h3>${destination.name}</h3>
                 <p class="popup-location">${destination.location}</p>
                 <p class="popup-description">${destination.description}</p>
@@ -232,6 +234,14 @@ class TourismMap {
                 </div>
             </div>
         `;
+    }
+
+    resolveImagePath(imagePath) {
+        if (!imagePath) return 'assets/images/placeholder.jpg';
+        if (imagePath.startsWith('http')) return imagePath;
+        if (imagePath.startsWith('assets/')) return imagePath;
+        if (imagePath.startsWith('uploads/')) return imagePath;
+        return `assets/images/${imagePath}`;
     }
 
     async getWeatherForDestination(coords) {
@@ -527,8 +537,12 @@ class TourismMap {
 
         // Set content
         title.textContent = destination.name;
-        mainImage.src = destination.images[0];
+
+        const mainImgSrc = this.resolveImagePath(destination.images && destination.images.length > 0 ? destination.images[0] : null);
+        mainImage.src = mainImgSrc;
+        mainImage.onerror = () => { mainImage.src = 'assets/images/placeholder.jpg'; };
         mainImage.alt = destination.name;
+
         rating.textContent = destination.rating;
 
         category.textContent = destination.category.charAt(0).toUpperCase() + destination.category.slice(1);
@@ -548,19 +562,23 @@ class TourismMap {
 
         // Generate thumbnails
         thumbnails.innerHTML = '';
-        destination.images.forEach((img, index) => {
-            const thumb = document.createElement('img');
-            thumb.src = img;
-            thumb.alt = `${destination.name} ${index + 1}`;
-            thumb.classList.add('thumbnail');
-            if (index === 0) thumb.classList.add('active');
-            thumb.addEventListener('click', () => {
-                mainImage.src = img;
-                document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
-                thumb.classList.add('active');
+        if (destination.images && destination.images.length > 0) {
+            destination.images.forEach((img, index) => {
+                const thumb = document.createElement('img');
+                const thumbSrc = this.resolveImagePath(img);
+                thumb.src = thumbSrc;
+                thumb.onerror = () => { thumb.src = 'assets/images/placeholder.jpg'; };
+                thumb.alt = `${destination.name} ${index + 1}`;
+                thumb.classList.add('thumbnail');
+                if (index === 0) thumb.classList.add('active');
+                thumb.addEventListener('click', () => {
+                    mainImage.src = thumbSrc;
+                    document.querySelectorAll('.thumbnail').forEach(t => t.classList.remove('active'));
+                    thumb.classList.add('active');
+                });
+                thumbnails.appendChild(thumb);
             });
-            thumbnails.appendChild(thumb);
-        });
+        }
 
         // Set button actions
         detailBtn.href = `detail.html?id=${destination.id}`;
@@ -614,6 +632,8 @@ class TourismMap {
         const modal = document.getElementById('favorites-modal');
         const list = document.getElementById('favorites-list');
 
+        if (!modal || !list) return;
+
         list.innerHTML = '';
 
         if (this.favorites.length === 0) {
@@ -623,9 +643,11 @@ class TourismMap {
                 const destination = (this.tourismData || []).find(d => d.id === id);
                 if (destination) {
                     const item = document.createElement('div');
+                    const imgSrc = this.resolveImagePath(destination.images[0]);
+
                     item.className = 'favorite-item';
                     item.innerHTML = `
-                        <img src="${destination.images[0]}" alt="${destination.name}" class="favorite-image">
+                        <img src="${imgSrc}" alt="${destination.name}" class="favorite-image">
                         <div class="favorite-info">
                             <h4><a href="detail.html?id=${destination.id}">${destination.name}</a></h4>
                             <p>${destination.location}</p>
@@ -637,6 +659,7 @@ class TourismMap {
                     `;
                     item.addEventListener('click', () => {
                         this.map.setView(destination.coords, 15);
+                        this.showQuickView(destination);
                         modal.style.display = 'none';
                     });
                     list.appendChild(item);

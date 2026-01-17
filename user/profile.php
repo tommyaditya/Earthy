@@ -3,7 +3,7 @@ session_start();
 
 // Check if user is logged in
 if (!isset($_SESSION['logged_in']) || !$_SESSION['logged_in']) {
-    header('Location: ../admin/login.php');
+    header('Location: login.php');
     exit;
 }
 
@@ -27,11 +27,13 @@ $profile_picture = $userData['profile_picture'] ?? null;
 ?>
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - <?php echo htmlspecialchars($username); ?></title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         :root {
@@ -62,7 +64,7 @@ $profile_picture = $userData['profile_picture'] ?? null;
             background: white;
             border-radius: 24px;
             padding: 40px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
         }
 
         .profile-header {
@@ -117,7 +119,7 @@ $profile_picture = $userData['profile_picture'] ?? null;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
             transition: all 0.3s ease;
             border: 3px solid white;
         }
@@ -294,11 +296,108 @@ $profile_picture = $userData['profile_picture'] ?? null;
         }
 
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+            position: relative;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 20px;
+            color: var(--dark);
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #64748b;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .close-modal:hover {
+            color: var(--dark);
+        }
+
+        .form-group-modal {
+            margin-bottom: 20px;
+        }
+
+        .form-group-modal label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark);
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .form-group-modal input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-family: 'Poppins', sans-serif;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group-modal input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 30px;
         }
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="profile-card">
@@ -330,65 +429,99 @@ $profile_picture = $userData['profile_picture'] ?? null;
             </div>
 
             <div class="info-section">
-                <h2><i class="fas fa-info-circle"></i> Informasi Akun</h2>
-                
-                <div class="info-item">
-                    <i class="fas fa-user"></i>
-                    <div class="info-content">
-                        <div class="info-label">Username</div>
-                        <div class="info-value"><?php echo htmlspecialchars($username); ?></div>
+                <div class="info-section">
+                    <h2>
+                        <span><i class="fas fa-info-circle"></i> Informasi Akun</span>
+                        <button class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;"
+                            onclick="openEditModal()">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                    </h2>
+
+                    <div class="info-item">
+                        <i class="fas fa-user"></i>
+                        <div class="info-content">
+                            <div class="info-label">Username</div>
+                            <div class="info-value"><?php echo htmlspecialchars($username); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <i class="fas fa-envelope"></i>
+                        <div class="info-content">
+                            <div class="info-label">Email</div>
+                            <div class="info-value"><?php echo htmlspecialchars($email); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <i class="fas fa-id-card"></i>
+                        <div class="info-content">
+                            <div class="info-label">Nama Lengkap</div>
+                            <div class="info-value"><?php echo htmlspecialchars($full_name ?: '-'); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <i class="fas fa-shield-alt"></i>
+                        <div class="info-content">
+                            <div class="info-label">Role</div>
+                            <div class="info-value"><?php echo ucfirst($role); ?></div>
+                        </div>
+                    </div>
+
+                    <div class="info-item">
+                        <i class="fas fa-fingerprint"></i>
+                        <div class="info-content">
+                            <div class="info-label">User ID</div>
+                            <div class="info-value">#<?php echo htmlspecialchars($user_id); ?></div>
+                        </div>
                     </div>
                 </div>
 
-                <div class="info-item">
-                    <i class="fas fa-envelope"></i>
-                    <div class="info-content">
-                        <div class="info-label">Email</div>
-                        <div class="info-value"><?php echo htmlspecialchars($email); ?></div>
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <i class="fas fa-id-card"></i>
-                    <div class="info-content">
-                        <div class="info-label">Nama Lengkap</div>
-                        <div class="info-value"><?php echo htmlspecialchars($full_name ?: '-'); ?></div>
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <i class="fas fa-shield-alt"></i>
-                    <div class="info-content">
-                        <div class="info-label">Role</div>
-                        <div class="info-value"><?php echo ucfirst($role); ?></div>
-                    </div>
-                </div>
-
-                <div class="info-item">
-                    <i class="fas fa-fingerprint"></i>
-                    <div class="info-content">
-                        <div class="info-label">User ID</div>
-                        <div class="info-value">#<?php echo htmlspecialchars($user_id); ?></div>
-                    </div>
+                <div class="actions">
+                    <?php if ($role === 'admin'): ?>
+                        <a href="../admin/index.php" class="btn">
+                            <i class="fas fa-tachometer-alt"></i>
+                            Dashboard Admin
+                        </a>
+                    <?php endif; ?>
+                    <a href="../index.html" class="btn btn-secondary">
+                        <i class="fas fa-home"></i>
+                        Kembali ke Beranda
+                    </a>
+                    <a href="../api/auth.php?action=logout" class="btn btn-secondary">
+                        <i class="fas fa-sign-out-alt"></i>
+                        Logout
+                    </a>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="actions">
-                <?php if ($role === 'admin'): ?>
-                <a href="../admin/index.php" class="btn">
-                    <i class="fas fa-tachometer-alt"></i>
-                    Dashboard Admin
-                </a>
-                <?php endif; ?>
-                <a href="../index.html" class="btn btn-secondary">
-                    <i class="fas fa-home"></i>
-                    Kembali ke Beranda
-                </a>
-                <a href="../api/auth.php?action=logout" class="btn btn-secondary">
-                    <i class="fas fa-sign-out-alt"></i>
-                    Logout
-                </a>
+    <!-- Edit Profile Modal -->
+    <div id="editModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Edit Profil</h2>
+                <button class="close-modal" onclick="closeEditModal()">&times;</button>
             </div>
+            <form id="editProfileForm">
+                <div class="form-group-modal">
+                    <label for="edit_username">Username</label>
+                    <input type="text" id="edit_username" name="username"
+                        value="<?php echo htmlspecialchars($username); ?>" required>
+                </div>
+                <div class="form-group-modal">
+                    <label for="edit_full_name">Nama Lengkap</label>
+                    <input type="text" id="edit_full_name" name="full_name"
+                        value="<?php echo htmlspecialchars($full_name); ?>" placeholder="Belum diisi">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Batal</button>
+                    <button type="submit" class="btn">Simpan Perubahan</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -408,7 +541,7 @@ $profile_picture = $userData['profile_picture'] ?? null;
 
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            
+
             if (!file) return;
 
             // Validate file type
@@ -467,6 +600,54 @@ $profile_picture = $userData['profile_picture'] ?? null;
                 uploadProgress.classList.remove('show');
             }
         });
+
+        // Edit Profile Modal Logic
+        const editModal = document.getElementById('editModal');
+        const editForm = document.getElementById('editProfileForm');
+
+        function openEditModal() {
+            editModal.classList.add('show');
+        }
+
+        function closeEditModal() {
+            editModal.classList.remove('show');
+        }
+
+        // Close modal when clicking outside
+        editModal.addEventListener('click', (e) => {
+            if (e.target === editModal) {
+                closeEditModal();
+            }
+        });
+
+        // Handle edit form submission
+        editForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(editForm);
+
+            try {
+                const response = await fetch('../api/update_user.php', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showAlert('Profil berhasil diperbarui! Halaman akan dimuat ulang...', 'success');
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showAlert(result.message || 'Gagal memperbarui profil', 'error');
+                }
+            } catch (error) {
+                console.error('Update error:', error);
+                showAlert('Terjadi kesalahan saat menghubungi server', 'error');
+            }
+        });
     </script>
 </body>
+
 </html>

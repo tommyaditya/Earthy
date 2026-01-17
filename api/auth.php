@@ -20,25 +20,25 @@ $method = $_SERVER['REQUEST_METHOD'];
 try {
     $database = new Database();
     $db = $database->getConnection();
-    
+
     if ($method === 'POST') {
         // Login
         $data = json_decode(file_get_contents("php://input"));
-        
+
         if (!isset($data->username) || !isset($data->password)) {
             throw new Exception('Username dan password harus diisi');
         }
-        
+
         $query = "SELECT id, username, email, password, full_name, role, is_active, profile_picture 
                   FROM users 
                   WHERE username = :username AND is_active = 1";
-        
+
         $stmt = $db->prepare($query);
         $stmt->bindParam(':username', $data->username);
         $stmt->execute();
 
         $user = $stmt->fetch(PDO::FETCH_ASSOC);
-        
+
         if (!$user) {
             http_response_code(401);
             echo json_encode([
@@ -47,7 +47,7 @@ try {
             ]);
             exit;
         }
-        
+
         // Verify password
         if (!password_verify($data->password, $user['password'])) {
             http_response_code(401);
@@ -57,7 +57,7 @@ try {
             ]);
             exit;
         }
-        
+
         // Set session based on role and ensure profile_picture has a default
         $_SESSION['user_id'] = $user['id'];
         $_SESSION['username'] = $user['username'];
@@ -66,7 +66,7 @@ try {
         $_SESSION['role'] = $user['role'];
         $_SESSION['logged_in'] = true;
         $_SESSION['profile_picture'] = !empty($user['profile_picture']) ? $user['profile_picture'] : 'assets/images/default-profile.png';
-        
+
         // For backward compatibility with existing admin pages
         if ($user['role'] === 'admin') {
             $_SESSION['admin_id'] = $user['id'];
@@ -76,10 +76,10 @@ try {
             $_SESSION['admin_role'] = $user['role'];
             $_SESSION['admin_logged_in'] = true;
         }
-        
+
         // Determine redirect URL based on role (relative to login page location)
-        $redirectUrl = $user['role'] === 'admin' ? 'index.php' : '../index.html';
-        
+        $redirectUrl = $user['role'] === 'admin' ? '../admin/index.php' : '../index.html';
+
         http_response_code(200);
         echo json_encode([
             'success' => true,
@@ -94,24 +94,26 @@ try {
                 'profile_picture' => $_SESSION['profile_picture']
             ]
         ]);
-        
+
     } elseif ($method === 'GET') {
         $action = isset($_GET['action']) ? $_GET['action'] : 'check';
-        
+
         if ($action === 'logout') {
             // Logout
             session_destroy();
-            
+
             http_response_code(200);
             echo json_encode([
                 'success' => true,
                 'message' => 'Logout berhasil'
             ]);
-            
+
         } elseif ($action === 'check') {
             // Check session
-            if ((isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) ||
-                (isset($_SESSION['logged_in']) && $_SESSION['logged_in'])) {
+            if (
+                (isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in']) ||
+                (isset($_SESSION['logged_in']) && $_SESSION['logged_in'])
+            ) {
 
                 // Determine which session data to use
                 $sessionData = [];
@@ -149,7 +151,7 @@ try {
             }
         }
     }
-    
+
 } catch (Exception $e) {
     http_response_code(500);
     echo json_encode([

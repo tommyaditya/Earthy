@@ -436,7 +436,7 @@ function toggleFavorite() {
     }
 
     // Here you would typically save to localStorage or send to server
-    const destinationId = new URLSearchParams(window.location.search).get('id');
+    const destinationId = parseInt(new URLSearchParams(window.location.search).get('id'));
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
 
     if (isFavorited) {
@@ -504,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.destinationDetail = new DestinationDetail();
 
     // Load favorite state
-    const destinationId = new URLSearchParams(window.location.search).get('id');
+    const destinationId = parseInt(new URLSearchParams(window.location.search).get('id'));
     const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
     const btn = document.querySelector('.action-btn:nth-child(2) i');
 
